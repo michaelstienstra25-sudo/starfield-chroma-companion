@@ -1,0 +1,17 @@
+{
+  "chromaRoot": "http://localhost:54235/razer/chromasdk",
+  "udpPort": 47321,
+  "frameMs": 90,
+  "staleMs": 15000,
+  "brightness": 1,
+  "pulseBoost": 1.45,
+  "logEvents": true,
+  "logHeartbeats": false,
+  "accentDevices": true,
+  "artifactFormIds": [],
+  "damageThresholds": {
+    "chip": 1,
+    "heavy": 25,
+    "critical": 150
+  }
+}

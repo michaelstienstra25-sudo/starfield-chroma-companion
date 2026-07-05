@@ -1,0 +1,38 @@
+# Logs and local runtime state
+*.log
+*.err.log
+
+# Local release artifacts
+release/
+*.zip
+
+# Build output
+build/
+out/
+dist/
+.xmake/
+*.obj
+*.pdb
+*.ilk
+*.lib
+*.exp
+*.dll
+*.exe
+
+# CMake
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+install_manifest.txt
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS/editor noise
+.DS_Store
+Thumbs.db
+.vs/
+.vscode/
