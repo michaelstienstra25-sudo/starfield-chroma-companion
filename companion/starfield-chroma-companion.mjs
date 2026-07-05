@@ -159,6 +159,9 @@ class LightingState {
     this.lastScannerAnomalyPulse = 0;
     this.scannerAnomalyUntil = 0;
     this.scannerAnomalyLevel = 0;
+    this.gravJumpArmedUntil = 0;
+    this.gravChargeUntil = 0;
+    this.gravChargeLevel = 0;
   }
 
   push(type, ttl = 24) {
@@ -172,14 +175,25 @@ class LightingState {
     this.scannerAnomalyLevel = Math.min(1, Math.max(this.scannerAnomalyLevel, 0.52) + amount);
   }
 
+  activateGravCharge(amount = 0.18) {
+    const now = Date.now();
+    this.gravChargeUntil = now + 26000;
+    this.gravChargeLevel = Math.min(1, Math.max(this.gravChargeLevel, 0.28) + amount);
+  }
+
   handleMenuEvent(event) {
     const menu = String(event.menu ?? "");
     const opening = event.type !== "ui.menu.close" && event.opening !== false;
+    const now = Date.now();
 
     if (!opening) {
       if (menu === "MonocleMenu") {
         this.scannerOpen = false;
-        this.scannerActiveUntil = Date.now() + 2500;
+        this.scannerActiveUntil = now + 2500;
+      }
+      if (menu === "GalaxyStarMapMenu") {
+        this.gravJumpArmedUntil = now + 18000;
+        this.activateGravCharge(0.1);
       }
       if (["DataMenu", "PauseMenu", "InventoryMenu", "SkillsMenu", "BSMissionMenu", "GalaxyStarMapMenu", "SpaceshipEditorMenu", "PowersMenu", "FavoritesMenu"].includes(menu)) {
         this.mode = "explore";
@@ -194,6 +208,15 @@ class LightingState {
       case "FaderMenu":
         return;
       case "LoadingMenu":
+        if (now < this.gravJumpArmedUntil) {
+          this.mode = "ship";
+          this.gravChargeLevel = 0;
+          this.push("gravWarp", 96);
+          return;
+        }
+        this.mode = "boot";
+        this.push("load", 28);
+        return;
       case "MainMenu":
         this.mode = "boot";
         this.push("load", 28);
@@ -214,7 +237,13 @@ class LightingState {
         return;
       case "GalaxyStarMapMenu":
         this.mode = "ship";
-        this.push("grav", 58);
+        this.gravJumpArmedUntil = now + 22000;
+        this.activateGravCharge(0.34);
+        this.push("gravCharge", 74);
+        return;
+      case "TakeoffMenu":
+        this.mode = "ship";
+        this.push("takeoff", 72);
         return;
       case "SkillsMenu":
         this.mode = "menu";
@@ -478,8 +507,17 @@ class LightingState {
       case "input.quickslot":
         this.push("quickslot", 14);
         break;
-      case "input.menu":
       case "input.map":
+        if (this.mode === "ship") {
+          this.gravJumpArmedUntil = Date.now() + 12000;
+          this.activateGravCharge(0.12);
+          this.push("gravCharge", 34);
+        } else {
+          this.mode = "menu";
+          this.push("menu", 40);
+        }
+        break;
+      case "input.menu":
       case "input.inventory":
         this.mode = "menu";
         this.push("menu", 40);
@@ -504,6 +542,7 @@ class LightingState {
     const frame = emptyFrame(Colors.off);
     this.paintGameplayZones(frame, stale);
     this.paintPulses(frame);
+    this.paintGravChargeState(frame);
     this.paintScannerAnomalyState(frame);
     return frame;
   }
@@ -564,6 +603,9 @@ class LightingState {
       if (pulse.type === "load" || pulse.type === "boot") this.loadPulse(frame, progress, strength);
       if (pulse.type === "menu") paint(frame, KeyZones.menus, pulseScale(Colors.menu, strength), 0.82);
       if (pulse.type === "grav") this.hyperspacePulse(frame, progress, strength);
+      if (pulse.type === "gravCharge") this.gravChargePulse(frame, progress, strength);
+      if (pulse.type === "gravWarp") this.hyperspacePulse(frame, progress, strength * 1.12);
+      if (pulse.type === "takeoff") this.takeoffPulse(frame, progress, strength);
       if (pulse.type === "vitals") paint(frame, KeyZones.movement, pulseScale(Colors.damage, strength * 0.7), 0.78);
       if (pulse.type === "radiation") this.radiationPulse(frame, progress, strength);
       if (pulse.type === "lifeState") this.damagePulse(frame, progress, strength * 0.8);
@@ -849,6 +891,50 @@ class LightingState {
       }
     }
     this.edgeFlash(frame, color, strength * 0.75);
+  }
+
+  paintGravChargeState(frame) {
+    const now = Date.now();
+    if (now > this.gravChargeUntil) {
+      this.gravChargeLevel = Math.max(0, this.gravChargeLevel - 0.012);
+      if (this.gravChargeLevel <= 0.02) return;
+    } else {
+      this.gravChargeLevel = Math.min(1, this.gravChargeLevel + 0.0035);
+    }
+
+    const level = Math.min(1, this.gravChargeLevel);
+    const hum = 0.58 + Math.sin(this.tick * (0.1 + level * 0.16)) * 0.18;
+    const sweep = (this.tick % Math.max(14, Math.round(42 - level * 20))) / Math.max(14, Math.round(42 - level * 20));
+    paint(frame, KeyZones.ship, pulseScale(Colors.grav, 0.36 + level * 0.72), 0.94);
+    paint(frame, KeyZones.systems, pulseScale(Colors.oxygen, (0.18 + level * 0.42) * hum), 0.72);
+    paint(frame, KeyZones.menus, pulseScale(Colors.starlight, level * 0.34), 0.42);
+    this.sweepPulse(frame, Colors.grav, sweep, 0.12 + level * 0.38);
+    if (level > 0.55) this.centerPulse(frame, Colors.starlight, sweep, (level - 0.45) * 0.26);
+  }
+
+  gravChargePulse(frame, progress, strength) {
+    const charge = Math.min(1, progress * 1.3);
+    const pulse = strength * (0.45 + Math.max(0, Math.sin(this.tick * 0.42)) * 0.38);
+    paint(frame, KeyZones.ship, pulseScale(Colors.grav, 0.35 + charge * 0.72), 0.94);
+    paint(frame, KeyZones.systems, pulseScale(Colors.oxygen, pulse), 0.82);
+    paint(frame, KeyZones.menus, pulseScale(Colors.starlight, charge * strength * 0.48), 0.55);
+    this.centerPulse(frame, Colors.grav, charge, strength * charge * 0.42);
+  }
+
+  takeoffPulse(frame, progress, strength) {
+    const flame = strength * (0.55 + Math.max(0, Math.sin(progress * Math.PI * 7)) * 0.45);
+    const wave = progress * 24 - 2;
+    for (let row = 0; row < 6; row += 1) {
+      for (let col = 0; col < 22; col += 1) {
+        const band = Math.max(0, 1 - Math.abs(col - wave - row * 0.45) / 4);
+        const heat = mix(Colors.engine, Colors.warning, Math.min(1, band * 0.75 + flame * 0.25));
+        const amount = band * flame;
+        if (amount > 0.03) frame[row][col] = mix(frame[row][col], pulseScale(heat, amount), 0.9);
+      }
+    }
+    paint(frame, KeyZones.ship, pulseScale(Colors.engine, flame), 0.98);
+    paint(frame, KeyZones.jump, pulseScale(Colors.engine, flame * 0.82), 0.88);
+    paint(frame, KeyZones.systems, pulseScale(Colors.warning, flame * 0.45), 0.62);
   }
 
   hyperspacePulse(frame, progress, strength) {

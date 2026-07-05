@@ -5,4 +5,5 @@ if "%STARFIELD_DIR%"=="" set "STARFIELD_DIR=%ProgramFiles(x86)%\Steam\steamapps\
 set "PLUGIN_DIR=%STARFIELD_DIR%\Data\SFSE\Plugins"
 if not exist "%PLUGIN_DIR%" mkdir "%PLUGIN_DIR%"
 copy /Y "%~dp0release\StarfieldChromaCodex.dll" "%PLUGIN_DIR%\StarfieldChromaCodex.dll"
-echo Installed to "%PLUGIN_DIR%\StarfieldChromaCodex.dll"
+if exist "%~dp0release\StarfieldChromaProbe.dll" copy /Y "%~dp0release\StarfieldChromaProbe.dll" "%PLUGIN_DIR%\StarfieldChromaProbe.dll"
+echo Installed Starfield Chroma plugins to "%PLUGIN_DIR%"

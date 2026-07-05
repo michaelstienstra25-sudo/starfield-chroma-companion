@@ -5,7 +5,7 @@
   "staleMs": 15000,
   "brightness": 1,
   "pulseBoost": 1.45,
-  "logEvents": true,
+  "logEvents": false,
   "logHeartbeats": false,
   "accentDevices": true,
   "artifactFormIds": [],

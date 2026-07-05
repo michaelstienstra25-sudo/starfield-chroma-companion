@@ -25,7 +25,7 @@ This project is currently an early PC-only prototype. It is built for players wh
 
 1. Download the latest release zip.
 2. Extract it somewhere outside your Starfield folder.
-3. Install the SFSE plugin:
+3. Install the SFSE plugins:
 
 ```cmd
 install-plugin.cmd "C:\Path\To\SteamLibrary\steamapps\common\Starfield"
@@ -50,6 +50,8 @@ launch-starfield-sfse.cmd "C:\Path\To\SteamLibrary\steamapps\common\Starfield"
 ```
 
 Do not launch `Starfield.exe` directly, or SFSE plugins will not load.
+
+The installer copies both `StarfieldChromaCodex.dll` and `StarfieldChromaProbe.dll` when they are present in the release folder. The probe is used for menu-aware effects such as starmap, powers, temple transitions, and level-up screens.
 
 ## Configuration
 
@@ -81,6 +83,14 @@ Known limitations:
 - Requires SFSE.
 - Requires the companion app to keep running while the game is active.
 - Some game moments are detected through reliable event patterns rather than direct official Starfield APIs.
+- This alpha has been tuned on one local setup and still needs broader hardware/game-version testing.
+
+## Alpha Highlights
+
+- Scanner anomaly proximity sustain with stronger intensity near active distortions.
+- Temple, portal, and power effects through video/loading/menu patterns.
+- Grav jump sequence: starmap charge-up, loading warp, and takeoff engine sweep.
+- Distinct visual language for level-up, powers, damage, O2/gas, radiation, scanner, reload, combat, and ship moments.
 
 ## Build
 
