@@ -5,6 +5,7 @@
 # Local release artifacts
 release/
 release-vortex/
+release-vortex-clean/
 nexus-media/
 NEXUS_UPLOAD_FIELDS.txt
 *.zip

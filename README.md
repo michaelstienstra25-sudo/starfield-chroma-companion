@@ -25,10 +25,11 @@ This project is currently an early PC-only prototype. It is built for players wh
 
 1. Download the Vortex package from Nexus Mods.
 2. Install and enable it with Vortex.
-3. Start the companion from your Starfield Data folder:
+3. Start the companion from your Starfield Data folder with Node.js:
 
 ```cmd
-Data\StarfieldChromaCompanion\start-companion.cmd
+cd /d "C:\Path\To\SteamLibrary\steamapps\common\Starfield\Data\StarfieldChromaCompanion"
+node ".\companion\starfield-chroma-companion.mjs"
 ```
 
 4. Launch Starfield through SFSE.
@@ -44,6 +45,8 @@ It also installs the companion app to:
 ```text
 Data\StarfieldChromaCompanion\
 ```
+
+The Vortex package intentionally does not include Windows `.cmd` helper scripts, because some antivirus tools and mod managers flag script files more aggressively. The manual package still includes helper scripts for users who prefer them.
 
 ## Manual Install From A Release
 
