@@ -1,8 +1,20 @@
 # Starfield Chroma Companion
 
+![Starfield Chroma Companion banner](docs/images/starfield-chroma-header.png)
+
 Reactive Razer Chroma lighting for Starfield, powered by SFSE game events and a small Node.js companion app.
 
+[Download on Nexus Mods](https://www.nexusmods.com/starfield/mods/) · [GitHub releases](https://github.com/michaelstienstra25-sudo/starfield-chroma-companion/releases) · [Report an issue](https://github.com/michaelstienstra25-sudo/starfield-chroma-companion/issues)
+
 This project is currently an early PC-only prototype. It is built for players who run Starfield through SFSE and use Razer Synapse/Chroma devices.
+
+![Starfield Chroma Companion preview](docs/images/starfield-chroma-gallery.png)
+
+## Why Use It?
+
+Starfield Chroma Companion turns your Razer Chroma setup into a reactive cockpit, scanner, combat, and exploration lighting layer. It is tuned around real gameplay moments such as scanner anomalies, damage, oxygen warnings, grav jumps, temple/power moments, and level-up screens.
+
+This is an unofficial community project and is not affiliated with Bethesda, Razer, or Nexus Mods.
 
 ## Features
 
@@ -20,6 +32,18 @@ This project is currently an early PC-only prototype. It is built for players wh
 - Razer Synapse with Chroma enabled
 - Local Razer Chroma SDK REST service
 - Node.js 20 or newer
+
+## Looking For Testers
+
+This alpha has been tuned on one local setup and needs testing on more Razer Chroma keyboards, mice, mousepads, headsets, and Starfield/SFSE versions. Feedback, bug reports, feature ideas, and short gameplay clips are welcome.
+
+Useful reports include:
+
+- Starfield version and SFSE version.
+- Razer device model(s).
+- Whether Synapse/Chroma SDK was already running.
+- Which in-game effect worked or did not work.
+- Screenshots of errors, logs, or quarantine messages.
 
 ## Install With Vortex
 
@@ -47,6 +71,12 @@ Data\StarfieldChromaCompanion\
 ```
 
 The Vortex package intentionally does not include Windows `.cmd` helper scripts, because some antivirus tools and mod managers flag script files more aggressively. The manual package still includes helper scripts for users who prefer them.
+
+## Virus Scan Notes
+
+The Vortex package contains SFSE plugin DLLs. Some antivirus tools and mod managers may flag DLL-based game mods as suspicious until the files gain more reputation or are rescanned. The Vortex package does not include `.cmd`, `.bat`, or `.ps1` helper scripts.
+
+The source code is public in this repository for transparency. If a file is quarantined, review the warning carefully and only restore or allowlist it if you are comfortable running SFSE plugin mods.
 
 ## Manual Install From A Release
 
