@@ -4,6 +4,9 @@
 
 # Local release artifacts
 release/
+release-vortex/
+nexus-media/
+NEXUS_UPLOAD_FIELDS.txt
 *.zip
 
 # Build output

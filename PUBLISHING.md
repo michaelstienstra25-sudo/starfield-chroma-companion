@@ -50,7 +50,21 @@ This is an early alpha. It has been tuned on one local setup and needs wider tes
 
 ### Install
 
-1. Download the release zip.
+Vortex:
+
+1. Download the Vortex package.
+2. Install and enable it with Vortex.
+3. Start the companion from:
+
+```cmd
+Data\StarfieldChromaCompanion\start-companion.cmd
+```
+
+4. Launch Starfield through SFSE.
+
+Manual:
+
+1. Download the manual release zip.
 2. Extract it outside the Starfield folder.
 3. Run:
 
@@ -71,6 +85,16 @@ launch-starfield-sfse.cmd "C:\Path\To\SteamLibrary\steamapps\common\Starfield"
 ```
 
 Do not launch `Starfield.exe` directly, or SFSE plugins will not load.
+
+### Files
+
+Main file:
+
+StarfieldChromaCompanion-v0.1.0-alpha-vortex.zip
+
+Optional/manual file:
+
+StarfieldChromaCompanion-v0.1.0-alpha.zip
 
 ### Compatibility
 

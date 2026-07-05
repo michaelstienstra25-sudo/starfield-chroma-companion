@@ -21,7 +21,31 @@ This project is currently an early PC-only prototype. It is built for players wh
 - Local Razer Chroma SDK REST service
 - Node.js 20 or newer
 
-## Install From A Release
+## Install With Vortex
+
+1. Download the Vortex package from Nexus Mods.
+2. Install and enable it with Vortex.
+3. Start the companion from your Starfield Data folder:
+
+```cmd
+Data\StarfieldChromaCompanion\start-companion.cmd
+```
+
+4. Launch Starfield through SFSE.
+
+The Vortex package installs the SFSE plugins to:
+
+```text
+Data\SFSE\Plugins\
+```
+
+It also installs the companion app to:
+
+```text
+Data\StarfieldChromaCompanion\
+```
+
+## Manual Install From A Release
 
 1. Download the latest release zip.
 2. Extract it somewhere outside your Starfield folder.
