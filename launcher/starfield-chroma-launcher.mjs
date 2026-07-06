@@ -34,10 +34,12 @@ const TEST_EVENTS = {
   damage: "player.damage",
   heavyDamage: "player.trueDamage",
   oxygen: "oxygen.danger",
-  scanner: "scanner.anomaly",
-  grav: "starmap.gravJump",
+  scanner: "scanner.preview",
+  scannerAnomaly: "scanner.anomaly.preview",
+  grav: "grav.preview",
   level: "player.levelUp",
-  power: "temple.power",
+  power: "power.preview",
+  clear: "effects.clear",
 };
 
 function readJson(filePath, fallback) {
@@ -180,6 +182,18 @@ function openBrowser(url) {
   }).unref();
 }
 
+function openRazerChroma() {
+  childProcess.spawn("cmd.exe", ["/c", "start", "", "shell:AppsFolder\\Razer.Chroma.4"], {
+    detached: true,
+    stdio: "ignore",
+    windowsHide: true,
+  }).unref();
+  return {
+    opened: true,
+    message: "Razer Chroma opened. Go to CHROMA APPS and turn the global CHROMA APPS toggle on.",
+  };
+}
+
 function sendUdpEvent(type) {
   const config = loadConfig();
   const eventType = TEST_EVENTS[type] ?? type;
@@ -237,7 +251,10 @@ async function testChromaSdk() {
     body: JSON.stringify({ effect: "CHROMA_STATIC", param: { color: 0x00d7ff } }),
   });
   await fetchWithRetry(json.uri, { method: "DELETE" }, 2).catch(() => {});
-  return { ok: true };
+  return {
+    ok: true,
+    note: "If the keyboard stays on Spectrum Cycling, open Razer Chroma > CHROMA APPS and turn the global CHROMA APPS toggle on, then enable Starfield Chroma Companion.",
+  };
 }
 
 async function status() {
@@ -303,6 +320,10 @@ async function route(request, response) {
       respondJson(response, 200, await startStarfield());
       return;
     }
+    if (request.method === "POST" && request.url === "/api/open-razer-chroma") {
+      respondJson(response, 200, openRazerChroma());
+      return;
+    }
     if (request.method === "POST" && request.url === "/api/start-all") {
       await startCompanion();
       respondJson(response, 200, await startStarfield());
@@ -335,10 +356,11 @@ function renderHtml() {
 *{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at top right,#20204b 0,#090b12 42%);font-family:Segoe UI,Arial,sans-serif;color:var(--text)}
 main{max-width:1120px;margin:0 auto;padding:28px}h1{font-size:30px;margin:0 0 6px}h2{font-size:18px;margin:0 0 14px}.muted{color:var(--muted)}
 .top{display:flex;justify-content:space-between;gap:18px;align-items:flex-start;margin-bottom:22px}.grid{display:grid;grid-template-columns:1.1fr .9fr;gap:18px}.panel{background:rgba(21,24,36,.92);border:1px solid var(--line);border-radius:8px;padding:18px}
+.notice{border-color:#5b4a19;background:rgba(58,44,15,.56)}.notice h2{color:var(--gold)}.checklist{margin:10px 0 0;padding-left:20px;color:var(--muted)}.checklist li{margin:6px 0}.checklist strong{color:var(--text)}
 .status{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.pill{border:1px solid var(--line);border-radius:8px;padding:12px;background:#10131e}.pill strong{display:block;margin-bottom:4px}.ok{color:var(--green)}.bad{color:var(--red)}
 button{border:0;border-radius:7px;padding:11px 14px;background:var(--cyan);color:#001014;font-weight:700;cursor:pointer}button.secondary{background:#2b3144;color:var(--text);border:1px solid var(--line)}button.warn{background:var(--gold);color:#1f1300}button.danger{background:var(--red);color:white}
-.buttons{display:flex;flex-wrap:wrap;gap:10px}label{display:block;margin:12px 0 6px;color:var(--muted);font-size:13px}input[type=text],input[type=number]{width:100%;background:#0d1019;border:1px solid var(--line);border-radius:6px;color:var(--text);padding:10px}input[type=checkbox]{transform:scale(1.15);margin-right:8px}.row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.log{white-space:pre-wrap;background:#070a10;border:1px solid var(--line);border-radius:6px;min-height:72px;padding:12px;color:var(--muted)}
-@media(max-width:850px){.grid,.top{display:block}.panel{margin-bottom:14px}.status{grid-template-columns:1fr 1fr}.row{grid-template-columns:1fr}}
+.buttons{display:flex;flex-wrap:wrap;gap:10px}.help{color:var(--muted);font-size:12px;line-height:1.45;margin:5px 0 10px}.button-help{flex-basis:100%;margin-top:2px}.effect-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.effect{border:1px solid var(--line);border-radius:8px;background:#10131e;padding:12px}.effect button{width:100%;margin-bottom:8px}.effect strong{display:block;margin-bottom:3px}.effect span{display:block;color:var(--muted);font-size:12px;line-height:1.35}label{display:block;margin:12px 0 6px;color:var(--muted);font-size:13px}input[type=text],input[type=number]{width:100%;background:#0d1019;border:1px solid var(--line);border-radius:6px;color:var(--text);padding:10px}input[type=checkbox]{transform:scale(1.15);margin-right:8px}.row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.log{white-space:pre-wrap;background:#070a10;border:1px solid var(--line);border-radius:6px;min-height:72px;padding:12px;color:var(--muted)}
+@media(max-width:850px){.grid,.top{display:block}.panel{margin-bottom:14px}.status{grid-template-columns:1fr 1fr}.row,.effect-list{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -364,14 +386,32 @@ button{border:0;border-radius:7px;padding:11px 14px;background:var(--cyan);color
     </div>
   </section>
 
+  <section class="panel notice">
+    <h2>Required Razer Chroma Apps Setting</h2>
+    <p class="muted">Razer can accept SDK commands while still leaving the keyboard on Spectrum Cycling if Chroma Apps is disabled. If effects do not appear on the keyboard, check this first.</p>
+    <div class="buttons">
+      <button class="warn" onclick="post('/api/open-razer-chroma')">Open Razer Chroma</button>
+      <button class="secondary" onclick="post('/api/test-chroma')">Register/Test Chroma App</button>
+    </div>
+    <ol class="checklist">
+      <li>Open <strong>Razer Chroma</strong>.</li>
+      <li>Go to <strong>CHROMA APPS</strong>.</li>
+      <li>Turn the global <strong>CHROMA APPS</strong> toggle on.</li>
+      <li>Enable <strong>Starfield Chroma Companion</strong> in the app list.</li>
+      <li>Run a test effect. The dashboard should show <strong>App in use: Starfield Chroma Companion (Chroma Apps)</strong>.</li>
+    </ol>
+  </section>
+
   <div class="grid">
     <section class="panel">
       <h2>Launcher</h2>
+      <p class="help">Use these controls when debugging. The main desktop app normally handles this with one START STARFIELD button.</p>
       <div class="buttons">
         <button onclick="post('/api/start-companion')">Start Companion</button>
         <button class="secondary" onclick="post('/api/start-starfield')">Start SFSE</button>
         <button class="danger" onclick="post('/api/stop-companion')">Stop Companion</button>
         <button class="warn" onclick="post('/api/test-chroma')">Test Chroma SDK</button>
+        <div class="help button-help">Start Companion runs the RGB engine. Start SFSE launches Starfield through sfse_loader.exe. Test Chroma SDK only checks the Razer connection; it does not prove Chroma Apps is enabled.</div>
       </div>
       <label>Starfield folder</label>
       <input id="starfieldDir" type="text" placeholder="C:\\Path\\To\\SteamLibrary\\steamapps\\common\\Starfield">
@@ -380,14 +420,17 @@ button{border:0;border-radius:7px;padding:11px 14px;background:var(--cyan);color
 
     <section class="panel">
       <h2>Test Effects</h2>
-      <div class="buttons">
-        <button class="secondary" onclick="eventTest('damage')">Damage</button>
-        <button class="secondary" onclick="eventTest('heavyDamage')">Heavy Hit</button>
-        <button class="secondary" onclick="eventTest('oxygen')">O2/Gas</button>
-        <button class="secondary" onclick="eventTest('scanner')">Scanner</button>
-        <button class="secondary" onclick="eventTest('grav')">Grav</button>
-        <button class="secondary" onclick="eventTest('level')">Level Up</button>
-        <button class="secondary" onclick="eventTest('power')">Power</button>
+      <p class="help">These buttons send fake game events to preview lighting without needing to trigger them in Starfield.</p>
+      <div class="effect-list">
+        <div class="effect"><button class="secondary" onclick="eventTest('damage')">Damage</button><strong>Light hit</strong><span>Small combat feedback pulse.</span></div>
+        <div class="effect"><button class="secondary" onclick="eventTest('heavyDamage')">Heavy Hit</button><strong>Strong hit</strong><span>Full-keyboard warning for serious damage.</span></div>
+        <div class="effect"><button class="secondary" onclick="eventTest('oxygen')">O2/Gas</button><strong>Environment danger</strong><span>Oxygen, gas, or radiation style warning.</span></div>
+        <div class="effect"><button class="secondary" onclick="eventTest('scanner')">Scanner</button><strong>Scanner sweep</strong><span>Short preview of scanner lighting.</span></div>
+        <div class="effect"><button class="secondary" onclick="eventTest('scannerAnomaly')">Anomaly</button><strong>Artifact nearby</strong><span>Scanner anomaly pulse preview.</span></div>
+        <div class="effect"><button class="secondary" onclick="eventTest('grav')">Grav</button><strong>Grav jump</strong><span>Charge and jump preview.</span></div>
+        <div class="effect"><button class="secondary" onclick="eventTest('level')">Level Up</button><strong>Progress reward</strong><span>Celebration effect for level-up moments.</span></div>
+        <div class="effect"><button class="secondary" onclick="eventTest('power')">Power</button><strong>Starborn power</strong><span>Power-use/temple style burst.</span></div>
+        <div class="effect"><button class="danger" onclick="eventTest('clear')">Clear</button><strong>Reset effects</strong><span>Stops sustained preview effects and returns to the base state.</span></div>
       </div>
     </section>
   </div>
@@ -395,17 +438,19 @@ button{border:0;border-radius:7px;padding:11px 14px;background:var(--cyan);color
   <section class="panel">
     <h2>Configuration</h2>
     <div class="row">
-      <div><label>Brightness</label><input id="brightness" type="number" min="0.1" max="1" step="0.05"></div>
-      <div><label>Pulse boost</label><input id="pulseBoost" type="number" min="1" max="2" step="0.05"></div>
-      <div><label>Frame ms</label><input id="frameMs" type="number" min="40" max="250" step="5"></div>
+      <div><label>Brightness</label><input id="brightness" type="number" min="0.1" max="1" step="0.05"><p class="help">Overall RGB strength. Lower it if the keyboard is too bright.</p></div>
+      <div><label>Pulse boost</label><input id="pulseBoost" type="number" min="1" max="2" step="0.05"><p class="help">How much stronger reaction pulses become compared to base lighting.</p></div>
+      <div><label>Frame ms</label><input id="frameMs" type="number" min="40" max="250" step="5"><p class="help">Animation update speed. Lower is smoother, higher is lighter.</p></div>
     </div>
     <div class="row">
-      <div><label>Chip damage</label><input id="damageChip" type="number" min="0" step="1"></div>
-      <div><label>Heavy damage</label><input id="damageHeavy" type="number" min="0" step="1"></div>
-      <div><label>Critical damage</label><input id="damageCritical" type="number" min="0" step="1"></div>
+      <div><label>Chip damage</label><input id="damageChip" type="number" min="0" step="1"><p class="help">Minimum damage for a small hit pulse.</p></div>
+      <div><label>Heavy damage</label><input id="damageHeavy" type="number" min="0" step="1"><p class="help">Threshold for the stronger full-keyboard hit warning.</p></div>
+      <div><label>Critical damage</label><input id="damageCritical" type="number" min="0" step="1"><p class="help">Threshold for the most urgent damage warning.</p></div>
     </div>
     <label><input id="accentDevices" type="checkbox">Accent devices enabled</label>
+    <p class="help">Sends simplified mood colors to extra Chroma devices such as mouse, mousepad, or headset.</p>
     <label><input id="logEvents" type="checkbox">Log events for debugging</label>
+    <p class="help">Writes extra event details to logs. Useful while testing, normally off.</p>
     <div class="buttons" style="margin-top:12px"><button onclick="saveConfig()">Save Config</button></div>
     <p class="muted">Restart the companion after changing render settings so the new config is loaded.</p>
   </section>

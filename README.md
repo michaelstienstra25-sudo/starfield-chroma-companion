@@ -12,19 +12,54 @@ This project is currently an early PC-only prototype. It is built for players wh
 
 ## Quick Start
 
-The easiest way to run the alpha is through the included control panel:
+The easiest way to run the alpha is through the included desktop launcher app:
 
 ```cmd
-node ".\launcher\starfield-chroma-launcher.mjs"
+start-tray.cmd
+```
+
+Local builds can also use the compiled launcher:
+
+```cmd
+StarfieldChromaCompanion.exe
 ```
 
 From there you can:
 
-- Start or stop the companion.
-- Launch Starfield through `sfse_loader.exe`.
-- Test the Razer Chroma SDK connection.
-- Send test effects for damage, O2/gas, scanner anomaly, grav jump, level-up, and powers.
-- Adjust brightness, pulse strength, damage thresholds, logging, and your Starfield folder.
+- Launch Starfield with one `START STARFIELD` button.
+- Keep companion and Starfield status visible from the tray icon.
+- Open Settings for brightness, pulse strength, damage thresholds, logging, and your Starfield folder.
+- Open Razer Chroma to check the required Chroma Apps setting.
+- Open the Advanced Panel for Chroma SDK checks and test effects.
+
+## Install With Setup Assistant
+
+The easiest install option for most users is the single-file setup assistant:
+
+```text
+StarfieldChromaCompanionSetup-v0.1.3-alpha.exe
+```
+
+1. Run `StarfieldChromaCompanionSetup-v0.1.3-alpha.exe`.
+2. The setup assistant searches Steam libraries and common install paths for Starfield.
+3. If Starfield is not detected, browse to the folder that contains `sfse_loader.exe`.
+4. Click `Install`.
+
+The setup assistant installs the companion app to:
+
+```text
+%LOCALAPPDATA%\StarfieldChromaCompanion
+```
+
+It installs the SFSE plugin DLLs to:
+
+```text
+<Starfield folder>\Data\SFSE\Plugins
+```
+
+It can create optional Desktop and Windows Start Menu shortcuts. The selected Starfield folder is saved in `starfield-chroma.config.json`, so the launcher works even when Starfield is installed outside the default Steam folder.
+
+A zip-based installer package may also be provided as a fallback for users or mod managers that prefer extracted files.
 
 For manual installs, you can also run:
 
@@ -32,10 +67,16 @@ For manual installs, you can also run:
 launch-starfield-chroma.cmd
 ```
 
-The manual/local build also includes an optional Windows tray helper:
+The browser control panel is still available as the advanced/debug view:
 
 ```cmd
-start-tray.cmd
+node ".\launcher\starfield-chroma-launcher.mjs"
+```
+
+To rebuild the Windows launcher executable after changing the tray app:
+
+```cmd
+powershell -NoProfile -ExecutionPolicy Bypass -File ".\tools\build-launcher-exe.ps1"
 ```
 
 The companion must keep running while Starfield is active. If you launch only `Starfield.exe` or only `sfse_loader.exe`, the RGB effects will not start unless the companion is already running.
@@ -53,16 +94,31 @@ This is an unofficial community project and is not affiliated with Bethesda, Raz
 - Scanner anomaly proximity effect with sustained purple/white glitch lighting while the scanner is active.
 - Temple, portal, power, Powers menu, and level-up effects with distinct visual styles.
 - Optional accent colors for mouse, mousepad, headset, and chromalink devices.
-- Local control panel and optional Windows tray helper for starting, testing, and tuning the companion.
+- Starfield-styled desktop launcher with one `START STARFIELD` button, tray status, settings, and advanced test panel.
+- Single-file setup assistant that detects Starfield, installs the companion, installs SFSE plugin DLLs, and creates optional Desktop/Start Menu shortcuts.
 - Configurable brightness, damage thresholds, logging, Chroma SDK URL, UDP port, and stale timeout.
 
 ## Requirements
 
 - Starfield for PC
 - SFSE compatible with your installed Starfield version
-- Razer Synapse with Chroma enabled
+- Razer Synapse with Razer Chroma installed
+- Razer Chroma Apps enabled in Razer Chroma
 - Local Razer Chroma SDK REST service
 - Node.js 20 or newer
+
+## Razer Chroma Apps Setup
+
+Razer Chroma must allow Chroma Apps to take over device lighting. If this is off, the SDK can still answer successfully while the keyboard stays on a normal Quick Effect such as Spectrum Cycling.
+
+1. Open `Razer Chroma`.
+2. Go to `CHROMA APPS`.
+3. Turn the global `CHROMA APPS` toggle on.
+4. Make sure `Starfield Chroma Companion` is enabled in the app list.
+5. In the companion control panel, click `Register/Test Chroma App` or any test effect.
+6. Razer Chroma should show `App in use: Starfield Chroma Companion (Chroma Apps)`.
+
+The control panel includes an `Open Razer Chroma` button and repeats these steps. The app does not modify Razer's internal settings directly because Razer documents Chroma Apps as a user-controlled Synapse/Chroma setting.
 
 ## Looking For Testers
 
@@ -117,7 +173,9 @@ Suggested MO2 flow:
    - Binary: `node.exe`
    - Start in: the mod's `StarfieldChromaCompanion` folder inside MO2's mods directory
    - Arguments: `.\launcher\starfield-chroma-launcher.mjs`
-4. Open the control panel, start the companion, then launch Starfield through SFSE from MO2.
+4. Open the control panel and start the companion.
+5. If MO2 locks while the companion is running, unlock MO2.
+6. Launch Starfield through SFSE from MO2.
 
 If you launch the companion outside MO2, use the real path to the installed MO2 mod folder, not the virtual Starfield `Data` path.
 
@@ -168,6 +226,7 @@ Edit `starfield-chroma.config.json`:
 ```json
 {
   "brightness": 1,
+  "forceRefreshMs": 1000,
   "pulseBoost": 1.45,
   "logEvents": false,
   "accentDevices": true,
@@ -193,6 +252,7 @@ Known limitations:
 - Requires the companion app to keep running while the game is active.
 - Some game moments are detected through reliable event patterns rather than direct official Starfield APIs.
 - This alpha has been tuned on one local setup and still needs broader hardware/game-version testing.
+- Keyboard effects are the most complete path right now. Mouse, mousepad, headset, and chromalink accent support exists, but needs more device reports, especially for Naga-class mice.
 
 ## Alpha Highlights
 

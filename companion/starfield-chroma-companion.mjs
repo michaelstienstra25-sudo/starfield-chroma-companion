@@ -11,6 +11,7 @@ const DEFAULT_CONFIG = {
   udpPort: 47321,
   frameMs: 90,
   staleMs: 15000,
+  forceRefreshMs: 1000,
   brightness: 1,
   pulseBoost: 1.45,
   logEvents: false,
@@ -181,6 +182,20 @@ class LightingState {
     this.gravChargeLevel = Math.min(1, Math.max(this.gravChargeLevel, 0.28) + amount);
   }
 
+  clearSustainedEffects() {
+    this.pulses = [];
+    this.mode = "explore";
+    this.scannerActiveUntil = 0;
+    this.scannerOpen = false;
+    this.lastScannerAnomalySeen = 0;
+    this.lastScannerAnomalyPulse = 0;
+    this.scannerAnomalyUntil = 0;
+    this.scannerAnomalyLevel = 0;
+    this.gravJumpArmedUntil = 0;
+    this.gravChargeUntil = 0;
+    this.gravChargeLevel = 0;
+  }
+
   handleMenuEvent(event) {
     const menu = String(event.menu ?? "");
     const opening = event.type !== "ui.menu.close" && event.opening !== false;
@@ -337,6 +352,9 @@ class LightingState {
       case "player.damage":
         this.push("damage", 24);
         break;
+      case "player.trueDamage":
+        this.push("trueDamage", 34);
+        break;
       case "game.hit":
         this.push("trueDamage", 26);
         break;
@@ -392,15 +410,40 @@ class LightingState {
       case "hud.mode":
         this.push("scanner", 18);
         break;
+      case "scanner.preview":
+        this.scannerOpen = false;
+        this.scannerActiveUntil = Date.now() + 3500;
+        this.push("scanner", 34);
+        break;
+      case "scanner.anomaly.preview":
+        this.scannerOpen = false;
+        this.scannerActiveUntil = Date.now() + 7000;
+        this.scannerAnomalyUntil = Date.now() + 7000;
+        this.scannerAnomalyLevel = Math.max(this.scannerAnomalyLevel, 0.65);
+        this.push("scanner", 42);
+        break;
       case "scanner.guideEffect":
       case "scanner.anomaly":
         this.scannerActiveUntil = Date.now() + 120000;
         this.activateScannerAnomaly(0.5);
         break;
+      case "effects.clear":
+        this.clearSustainedEffects();
+        break;
+      case "grav.preview":
+        this.mode = "ship";
+        this.gravJumpArmedUntil = Date.now() + 8000;
+        this.gravChargeUntil = Date.now() + 6500;
+        this.gravChargeLevel = 0.88;
+        this.push("gravCharge", 48);
+        this.push("gravWarp", 54);
+        break;
       case "probe.loaded":
       case "probe.ready":
         this.push("boot", 38);
         break;
+      case "power.preview":
+      case "temple.power":
       case "power.used":
       case "starborn.power":
       case "player.power":
@@ -1031,15 +1074,16 @@ class ChromaClient {
     this.uri = null;
     this.heartbeatTimer = null;
     this.lastKeyboardFrame = "";
+    this.lastKeyboardSentAt = 0;
     this.lastStatic = new Map();
   }
 
   async init() {
     if (this.uri) return;
     const response = await requestJson("POST", CHROMA_ROOT, {
-      title: "Starfield Chroma Codex",
-      description: "Layered reactive Starfield lighting bridge",
-      author: { name: "Codex", contact: "local" },
+      title: "Starfield Chroma Companion",
+      description: "Reactive Razer Chroma lighting for Starfield",
+      author: { name: "Starfield Chroma Companion", contact: "GitHub" },
       device_supported: ["keyboard", "mouse", "mousepad", "headset", "chromalink"],
       category: "game",
     });
@@ -1067,8 +1111,10 @@ class ChromaClient {
   async keyboard(frame) {
     await this.init();
     const frameJson = JSON.stringify(frame);
-    if (frameJson === this.lastKeyboardFrame) return;
+    const now = Date.now();
+    if (frameJson === this.lastKeyboardFrame && now - this.lastKeyboardSentAt < CONFIG.forceRefreshMs) return;
     this.lastKeyboardFrame = frameJson;
+    this.lastKeyboardSentAt = now;
     await requestJsonWithRetry("PUT", `${this.uri}/keyboard`, {
       effect: "CHROMA_CUSTOM",
       param: frame,

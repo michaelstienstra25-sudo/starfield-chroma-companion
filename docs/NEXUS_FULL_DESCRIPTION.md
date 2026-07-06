@@ -1,7 +1,7 @@
 Source code and releases:
 https://github.com/michaelstienstra25-sudo/starfield-chroma-companion
 
-The source code is public on GitHub for transparency. The clean Vortex package contains SFSE plugin DLLs because they are required for Starfield event detection. It does not include .cmd, .bat, or .ps1 helper scripts.
+The source code is public on GitHub for transparency. The current setup assistant and clean Vortex package contain SFSE plugin DLLs because they are required for Starfield event detection. The clean Vortex package does not include .cmd, .bat, or .ps1 helper scripts.
 
 What this mod does:
 
@@ -9,9 +9,11 @@ Starfield Chroma Companion adds reactive Razer Chroma lighting to Starfield on P
 
 It makes supported Razer Chroma devices react to in-game moments such as scanner anomalies, combat, weapon fire, reloads, damage, O2/gas/radiation warnings, grav jumps, level-up/power moments, menus, saves, loads, and ship moments.
 
-The alpha includes a local browser control panel for starting the companion, launching SFSE, checking Chroma SDK status, testing effects, and tuning brightness/pulse settings.
+The alpha includes a Starfield-styled desktop launcher with one START STARFIELD button, status display, Settings, a Razer Chroma shortcut, and an Advanced Panel for Chroma SDK checks and test effects.
 
-The manual/local package also includes an optional Windows tray helper. The clean Vortex package avoids .cmd/.bat/.ps1 helper scripts to reduce false-positive quarantine risk.
+The setup assistant can auto-detect Starfield, install the companion app, install the SFSE plugin DLLs, save the Starfield folder in the config, and create optional Desktop/Start Menu shortcuts.
+
+Keyboard effects are the most complete path right now. Mouse, mousepad, headset, and chromalink accent support exists, but I am still looking for more hardware reports, especially for Naga-class mice.
 
 Required software:
 
@@ -20,8 +22,19 @@ Required software:
 - Node.js 20 or newer
 - Razer Synapse
 - Razer Chroma / Chroma SDK enabled
+- Chroma Apps enabled in Razer Chroma
 
 Installation instructions
+
+Recommended setup assistant:
+
+1. Download StarfieldChromaCompanionSetup-v0.1.3-alpha.exe.
+2. Run it.
+3. Let it detect Starfield, or browse to the folder that contains sfse_loader.exe.
+4. Choose whether you want Desktop and Start Menu shortcuts.
+5. Click Install.
+6. Open Razer Chroma and make sure Chroma Apps is enabled.
+7. Launch with the Starfield Chroma Companion shortcut.
 
 Vortex:
 
@@ -48,7 +61,9 @@ Suggested MO2 setup:
    - Binary: node.exe
    - Start in: the mod's StarfieldChromaCompanion folder inside MO2's mods directory
    - Arguments: .\launcher\starfield-chroma-launcher.mjs
-4. Start the control panel, start the companion, then launch Starfield through SFSE from MO2.
+4. Start the control panel and start the companion.
+5. If MO2 locks while the companion is running, unlock MO2.
+6. Launch Starfield through SFSE from MO2.
 
 Manual:
 

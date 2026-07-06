@@ -3,6 +3,7 @@
   "udpPort": 47321,
   "frameMs": 90,
   "staleMs": 15000,
+  "forceRefreshMs": 1000,
   "brightness": 1,
   "pulseBoost": 1.45,
   "logEvents": false,
