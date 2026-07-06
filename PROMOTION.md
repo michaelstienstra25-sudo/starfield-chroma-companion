@@ -11,6 +11,8 @@ https://github.com/michaelstienstra25-sudo/starfield-chroma-companion
 
 The source code is public on GitHub for transparency. The Vortex package contains SFSE plugin DLLs because they are required for Starfield event detection. It does not include `.cmd`, `.bat`, or `.ps1` helper scripts.
 
+The alpha now includes a local browser control panel for starting the companion, launching SFSE, testing effects, checking Chroma SDK connectivity, and tuning brightness/pulse settings.
+
 Looking for testers with different Razer Chroma setups. Feedback, bug reports, device compatibility notes, and short gameplay clips are welcome.
 
 ## Nexus Pinned Comment
@@ -36,11 +38,11 @@ The likely MO2 flow is:
 
 1. Install the clean Vortex package in MO2 and enable it.
 2. Add `sfse_loader.exe` as an MO2 executable and launch Starfield through MO2.
-3. Add a second MO2 executable for the companion:
+3. Add a second MO2 executable for the control panel:
    - Binary: `node.exe`
    - Start in: the mod's `StarfieldChromaCompanion` folder inside MO2's mods directory
-   - Arguments: `.\companion\starfield-chroma-companion.mjs`
-4. Start the companion first, then launch Starfield through SFSE from MO2.
+   - Arguments: `.\launcher\starfield-chroma-launcher.mjs`
+4. Open the control panel, start the companion, then launch Starfield through SFSE from MO2.
 
 I have updated the description/docs to make this clearer.
 

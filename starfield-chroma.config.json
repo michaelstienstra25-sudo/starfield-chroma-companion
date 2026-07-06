@@ -8,6 +8,7 @@
   "logEvents": false,
   "logHeartbeats": false,
   "accentDevices": true,
+  "starfieldDir": "",
   "artifactFormIds": [],
   "damageThresholds": {
     "chip": 1,

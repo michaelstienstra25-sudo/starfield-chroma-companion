@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.1.1-alpha
+
+- Added a local browser control panel for companion status, SFSE launch, Chroma SDK checks, effect tests, and config tuning.
+- Added a one-click Windows launcher and optional Windows tray helper for the control panel.
+- Added a shortcut installer for `Desktop\Games`.
+- Updated Vortex, MO2, manual install, and Nexus text around the new launch flow.
+
 ## v0.1.0-alpha
 
 Initial private alpha release.

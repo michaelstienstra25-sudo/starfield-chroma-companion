@@ -36,6 +36,8 @@ Utilities / User Interface / Miscellaneous
 
 Starfield Chroma Companion adds reactive Razer Chroma lighting to Starfield. It uses SFSE game events, a CommonLibSF menu probe, and a small Node.js companion app to drive Razer Chroma devices through the local Chroma SDK.
 
+The current alpha includes a local browser control panel for starting the companion, launching SFSE, checking Chroma SDK status, testing effects, and tuning brightness/pulse settings.
+
 This alpha includes lighting for combat, weapon fire, reloads, damage, bleedout, O2/gas/radiation, scanner activity, scanner anomalies, temple and power moments, Powers menu, level-up, starmap, grav jump charge-up, warp/loading, takeoff, saves, loads, and ship moments.
 
 Highlights:
@@ -54,14 +56,14 @@ Vortex:
 
 1. Download the Vortex package.
 2. Install and enable it with Vortex.
-3. After Vortex deploys the mod, open Command Prompt and run:
+3. After Vortex deploys the mod, open Command Prompt and run the control panel:
 
 ```cmd
 cd /d "C:\Path\To\SteamLibrary\steamapps\common\Starfield\Data\StarfieldChromaCompanion"
-node ".\companion\starfield-chroma-companion.mjs"
+node ".\launcher\starfield-chroma-launcher.mjs"
 ```
 
-4. Launch Starfield through SFSE.
+4. Click `Start Companion + SFSE`, or start the companion first and then launch Starfield through SFSE.
 
 Mod Organizer 2:
 
@@ -72,8 +74,8 @@ MO2 should work, but the companion must be launched in a way that can see its re
 3. Add a second MO2 executable for the companion:
    - Binary: `node.exe`
    - Start in: the mod's `StarfieldChromaCompanion` folder inside MO2's mods directory
-   - Arguments: `.\companion\starfield-chroma-companion.mjs`
-4. Start the companion first, then launch Starfield through SFSE from MO2.
+   - Arguments: `.\launcher\starfield-chroma-launcher.mjs`
+4. Open the control panel, start the companion, then launch Starfield through SFSE from MO2.
 
 Manual:
 
@@ -87,13 +89,13 @@ These instructions are for a normal manual install outside Vortex/MO2.
 install-plugin.cmd "C:\Path\To\SteamLibrary\steamapps\common\Starfield"
 ```
 
-4. Start the companion:
+4. Start the control panel:
 
 ```cmd
-start-companion.cmd
+launch-starfield-chroma.cmd
 ```
 
-5. Launch Starfield through SFSE:
+5. Click `Start Companion + SFSE`, or use the direct SFSE helper:
 
 ```cmd
 launch-starfield-sfse.cmd "C:\Path\To\SteamLibrary\steamapps\common\Starfield"

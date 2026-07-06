@@ -10,6 +10,36 @@ This project is currently an early PC-only prototype. It is built for players wh
 
 ![Starfield Chroma Companion preview](docs/images/starfield-chroma-gallery.png)
 
+## Quick Start
+
+The easiest way to run the alpha is through the included control panel:
+
+```cmd
+node ".\launcher\starfield-chroma-launcher.mjs"
+```
+
+From there you can:
+
+- Start or stop the companion.
+- Launch Starfield through `sfse_loader.exe`.
+- Test the Razer Chroma SDK connection.
+- Send test effects for damage, O2/gas, scanner anomaly, grav jump, level-up, and powers.
+- Adjust brightness, pulse strength, damage thresholds, logging, and your Starfield folder.
+
+For manual installs, you can also run:
+
+```cmd
+launch-starfield-chroma.cmd
+```
+
+The manual/local build also includes an optional Windows tray helper:
+
+```cmd
+start-tray.cmd
+```
+
+The companion must keep running while Starfield is active. If you launch only `Starfield.exe` or only `sfse_loader.exe`, the RGB effects will not start unless the companion is already running.
+
 ## Why Use It?
 
 Starfield Chroma Companion turns your Razer Chroma setup into a reactive cockpit, scanner, combat, and exploration lighting layer. It is tuned around real gameplay moments such as scanner anomalies, damage, oxygen warnings, grav jumps, temple/power moments, and level-up screens.
@@ -23,6 +53,7 @@ This is an unofficial community project and is not affiliated with Bethesda, Raz
 - Scanner anomaly proximity effect with sustained purple/white glitch lighting while the scanner is active.
 - Temple, portal, power, Powers menu, and level-up effects with distinct visual styles.
 - Optional accent colors for mouse, mousepad, headset, and chromalink devices.
+- Local control panel and optional Windows tray helper for starting, testing, and tuning the companion.
 - Configurable brightness, damage thresholds, logging, Chroma SDK URL, UDP port, and stale timeout.
 
 ## Requirements
@@ -49,14 +80,14 @@ Useful reports include:
 
 1. Download the Vortex package from Nexus Mods.
 2. Install and enable it with Vortex.
-3. Start the companion from your Starfield Data folder with Node.js:
+3. Start the control panel from your Starfield Data folder with Node.js:
 
 ```cmd
 cd /d "C:\Path\To\SteamLibrary\steamapps\common\Starfield\Data\StarfieldChromaCompanion"
-node ".\companion\starfield-chroma-companion.mjs"
+node ".\launcher\starfield-chroma-launcher.mjs"
 ```
 
-4. Launch Starfield through SFSE.
+4. Click `Start Companion + SFSE`, or start the companion first and then launch Starfield through SFSE.
 
 The Vortex package installs the SFSE plugins to:
 
@@ -85,8 +116,8 @@ Suggested MO2 flow:
 3. Add a second MO2 executable for the companion:
    - Binary: `node.exe`
    - Start in: the mod's `StarfieldChromaCompanion` folder inside MO2's mods directory
-   - Arguments: `.\companion\starfield-chroma-companion.mjs`
-4. Start the companion first, then launch Starfield through SFSE from MO2.
+   - Arguments: `.\launcher\starfield-chroma-launcher.mjs`
+4. Open the control panel, start the companion, then launch Starfield through SFSE from MO2.
 
 If you launch the companion outside MO2, use the real path to the installed MO2 mod folder, not the virtual Starfield `Data` path.
 
@@ -114,13 +145,13 @@ If Starfield is installed in the default Steam location, you can try:
 install-plugin.cmd
 ```
 
-4. Start the companion:
+4. Start the control panel:
 
 ```cmd
-start-companion.cmd
+launch-starfield-chroma.cmd
 ```
 
-5. Launch Starfield through SFSE:
+5. Click `Start Companion + SFSE`, or use the old direct SFSE helper:
 
 ```cmd
 launch-starfield-sfse.cmd "C:\Path\To\SteamLibrary\steamapps\common\Starfield"
@@ -140,6 +171,7 @@ Edit `starfield-chroma.config.json`:
   "pulseBoost": 1.45,
   "logEvents": false,
   "accentDevices": true,
+  "starfieldDir": "",
   "damageThresholds": {
     "chip": 1,
     "heavy": 25,
