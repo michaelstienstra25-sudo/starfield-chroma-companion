@@ -54,15 +54,30 @@ Vortex:
 
 1. Download the Vortex package.
 2. Install and enable it with Vortex.
-3. Start the companion from:
+3. After Vortex deploys the mod, open Command Prompt and run:
 
 ```cmd
-Data\StarfieldChromaCompanion\start-companion.cmd
+cd /d "C:\Path\To\SteamLibrary\steamapps\common\Starfield\Data\StarfieldChromaCompanion"
+node ".\companion\starfield-chroma-companion.mjs"
 ```
 
 4. Launch Starfield through SFSE.
 
+Mod Organizer 2:
+
+MO2 should work, but the companion must be launched in a way that can see its real files. Starfield and SFSE run through MO2's virtual file system, while a separately started Node.js process does not automatically see that VFS.
+
+1. Install the clean Vortex package in MO2 and enable it.
+2. Add `sfse_loader.exe` as an MO2 executable and launch Starfield through MO2.
+3. Add a second MO2 executable for the companion:
+   - Binary: `node.exe`
+   - Start in: the mod's `StarfieldChromaCompanion` folder inside MO2's mods directory
+   - Arguments: `.\companion\starfield-chroma-companion.mjs`
+4. Start the companion first, then launch Starfield through SFSE from MO2.
+
 Manual:
+
+These instructions are for a normal manual install outside Vortex/MO2.
 
 1. Download the manual release zip.
 2. Extract it outside the Starfield folder.

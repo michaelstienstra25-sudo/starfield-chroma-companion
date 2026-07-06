@@ -24,6 +24,26 @@ Looking for testers with different keyboards, mice, mousepads, headsets, Starfie
 Source code is available on GitHub:
 https://github.com/michaelstienstra25-sudo/starfield-chroma-companion
 
+## Nexus Reply: Mod Organizer 2
+
+Yes, MO2 support should be possible, but the setup is different from normal manual/Vortex installs.
+
+You are right about the virtual file system point. Under MO2, SFSE and Starfield see enabled mod files through MO2's VFS, while a separately started Node.js process may not see that same virtual Data folder unless it is launched through MO2 or pointed directly at the real MO2 mod folder.
+
+The companion does not need to share Starfield's virtual Data folder at runtime. The SFSE plugin sends events to the companion over localhost/UDP. The companion mainly needs its own script and config file.
+
+The likely MO2 flow is:
+
+1. Install the clean Vortex package in MO2 and enable it.
+2. Add `sfse_loader.exe` as an MO2 executable and launch Starfield through MO2.
+3. Add a second MO2 executable for the companion:
+   - Binary: `node.exe`
+   - Start in: the mod's `StarfieldChromaCompanion` folder inside MO2's mods directory
+   - Arguments: `.\companion\starfield-chroma-companion.mjs`
+4. Start the companion first, then launch Starfield through SFSE from MO2.
+
+I have updated the description/docs to make this clearer.
+
 ## Reddit / Discord Post
 
 I released an early alpha of Starfield Chroma Companion, a PC mod that adds reactive Razer Chroma lighting to Starfield using SFSE game events and a small local Node.js companion app.

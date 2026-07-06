@@ -72,6 +72,24 @@ Data\StarfieldChromaCompanion\
 
 The Vortex package intentionally does not include Windows `.cmd` helper scripts, because some antivirus tools and mod managers flag script files more aggressively. The manual package still includes helper scripts for users who prefer them.
 
+## Install With Mod Organizer 2
+
+MO2 should work, but it needs a slightly different setup because of MO2's virtual file system. Starfield and SFSE see enabled mod files through MO2's VFS. A separately started Node.js process does not automatically see that same virtual `Data` folder unless you launch it through MO2 or point it at the real MO2 mod folder.
+
+The companion does not need to share Starfield's virtual `Data` folder at runtime. The SFSE plugin sends events to the companion over localhost/UDP. The companion mainly needs its own script and config file.
+
+Suggested MO2 flow:
+
+1. Install the clean Vortex package in MO2 and enable it.
+2. Add `sfse_loader.exe` as an MO2 executable and launch Starfield through MO2.
+3. Add a second MO2 executable for the companion:
+   - Binary: `node.exe`
+   - Start in: the mod's `StarfieldChromaCompanion` folder inside MO2's mods directory
+   - Arguments: `.\companion\starfield-chroma-companion.mjs`
+4. Start the companion first, then launch Starfield through SFSE from MO2.
+
+If you launch the companion outside MO2, use the real path to the installed MO2 mod folder, not the virtual Starfield `Data` path.
+
 ## Virus Scan Notes
 
 The Vortex package contains SFSE plugin DLLs. Some antivirus tools and mod managers may flag DLL-based game mods as suspicious until the files gain more reputation or are rescanned. The Vortex package does not include `.cmd`, `.bat`, or `.ps1` helper scripts.
@@ -79,6 +97,8 @@ The Vortex package contains SFSE plugin DLLs. Some antivirus tools and mod manag
 The source code is public in this repository for transparency. If a file is quarantined, review the warning carefully and only restore or allowlist it if you are comfortable running SFSE plugin mods.
 
 ## Manual Install From A Release
+
+These instructions are for a normal manual install outside Vortex/MO2. They are not the recommended path for MO2 because MO2 uses a virtual file system.
 
 1. Download the latest release zip.
 2. Extract it somewhere outside your Starfield folder.
