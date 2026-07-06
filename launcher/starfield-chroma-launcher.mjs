@@ -109,11 +109,7 @@ function execPowerShell(script) {
 
 async function findNodeProcesses(pattern) {
   const escaped = pattern.replace(/'/g, "''");
-  const script = [
-    "$ErrorActionPreference='SilentlyContinue'",
-    `Get-CimInstance Win32_Process | Where-Object { $_.CommandLine -like '*${escaped}*' } |`,
-    "Select-Object ProcessId,CommandLine | ConvertTo-Json -Compress",
-  ].join("; ");
+  const script = `$ErrorActionPreference='SilentlyContinue'; Get-CimInstance Win32_Process | Where-Object { $_.Name -eq 'node.exe' -and $_.CommandLine -like '*${escaped}*' } | Select-Object ProcessId,CommandLine | ConvertTo-Json -Compress`;
   const result = await execPowerShell(script);
   if (!result.stdout) return [];
   try {
@@ -139,10 +135,12 @@ async function companionRunning() {
 
 async function startCompanion() {
   if (await companionRunning()) return { started: false, message: "Companion is already running." };
+  const out = fs.openSync(path.join(ROOT_DIR, "companion.log"), "a");
+  const err = fs.openSync(path.join(ROOT_DIR, "companion.err.log"), "a");
   const child = childProcess.spawn(process.execPath, [COMPANION_SCRIPT], {
     cwd: ROOT_DIR,
     detached: true,
-    stdio: "ignore",
+    stdio: ["ignore", out, err],
     windowsHide: false,
   });
   child.unref();
@@ -196,6 +194,25 @@ function sendUdpEvent(type) {
   });
 }
 
+async function wait(ms) {
+  await new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function fetchWithRetry(url, options, attempts = 6) {
+  let lastError;
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    try {
+      return await fetch(url, options);
+    } catch (error) {
+      lastError = error;
+      const code = error.cause?.code;
+      if (!["ECONNREFUSED", "ECONNRESET", "ETIMEDOUT"].includes(code) || attempt === attempts) break;
+      await wait(200 * attempt);
+    }
+  }
+  throw lastError;
+}
+
 async function testChromaSdk() {
   const config = loadConfig();
   const body = JSON.stringify({
@@ -206,7 +223,7 @@ async function testChromaSdk() {
     category: "game",
   });
 
-  const response = await fetch(config.chromaRoot, {
+  const response = await fetchWithRetry(config.chromaRoot, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body,
@@ -214,12 +231,12 @@ async function testChromaSdk() {
   const json = await response.json();
   if (!json.uri) throw new Error(`Chroma SDK did not return a session uri: ${JSON.stringify(json)}`);
 
-  await fetch(`${json.uri}/keyboard`, {
+  await fetchWithRetry(`${json.uri}/keyboard`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ effect: "CHROMA_STATIC", param: { color: 0x00d7ff } }),
   });
-  await fetch(json.uri, { method: "DELETE" }).catch(() => {});
+  await fetchWithRetry(json.uri, { method: "DELETE" }, 2).catch(() => {});
   return { ok: true };
 }
 

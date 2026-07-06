@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.1.2-alpha
+
+- Fixed launcher status detection so only the real Node companion process counts as running.
+- Fixed duplicate companion startup from the control panel.
+- Added retry handling to the Chroma SDK test button for Razer's delayed per-session app port startup.
+- Improved companion logging when started from the launcher.
+
 ## v0.1.1-alpha
 
 - Added a local browser control panel for companion status, SFSE launch, Chroma SDK checks, effect tests, and config tuning.
