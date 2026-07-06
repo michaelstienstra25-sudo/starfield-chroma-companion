@@ -7,10 +7,24 @@ $setupExe = Join-Path $packageRoot "StarfieldChromaCompanionSetup.exe"
 $singleFileSetupExe = Join-Path $root "StarfieldChromaCompanionSetup-v0.1.3-alpha.exe"
 $iconFile = Join-Path $root "assets\starfield-chroma.ico"
 
-if (-not (Get-Command Invoke-ps2exe -ErrorAction SilentlyContinue)) {
-  Install-Module -Name ps2exe -Scope CurrentUser -Force -AllowClobber
+function Import-Ps2Exe {
+  $module = Get-Module -ListAvailable ps2exe | Sort-Object Version -Descending | Select-Object -First 1
+  if ($module) {
+    Import-Module $module.Path -ErrorAction Stop
+    return
+  }
+
+  $knownPath = Join-Path $HOME "Documents\PowerShell\Modules\ps2exe\1.0.18\ps2exe.psd1"
+  if (Test-Path -LiteralPath $knownPath) {
+    Import-Module $knownPath -ErrorAction Stop
+    return
+  }
+
+  Install-Module -Name ps2exe -Scope CurrentUser -Force -AllowClobber -Confirm:$false
+  Import-Module ps2exe -ErrorAction Stop
 }
-Import-Module ps2exe -ErrorAction Stop
+
+Import-Ps2Exe
 
 & (Join-Path $PSScriptRoot "build-launcher-exe.ps1")
 

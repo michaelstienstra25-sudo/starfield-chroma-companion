@@ -8,11 +8,25 @@ Add-Type -AssemblyName System.Drawing
 [System.Windows.Forms.Application]::EnableVisualStyles()
 
 function Test-PathSafe([string]$Path) {
+  if ([string]::IsNullOrWhiteSpace($Path)) { return $false }
   try {
     return [bool](Test-Path -LiteralPath $Path -ErrorAction SilentlyContinue)
   } catch {
     return $false
   }
+}
+
+function Join-PathSafe([string]$Base, [string]$Child) {
+  if ([string]::IsNullOrWhiteSpace($Base)) { return $Child }
+  if ([string]::IsNullOrWhiteSpace($Child)) { return $Base }
+  return [System.IO.Path]::Combine($Base, $Child)
+}
+
+function Get-ExistingDriveLetters {
+  [System.IO.DriveInfo]::GetDrives() |
+    Where-Object { $_.IsReady } |
+    ForEach-Object { $_.Name.Substring(0, 1).ToUpperInvariant() } |
+    Select-Object -Unique
 }
 
 function Get-ScriptBase {
@@ -63,7 +77,7 @@ function Get-SteamRoots {
       if ($install -and (Test-PathSafe $install)) { $roots.Add($install) }
     } catch {}
   }
-  foreach ($drive in "C","D","E","F","G","H","I","J") {
+  foreach ($drive in Get-ExistingDriveLetters) {
     foreach ($path in @("$drive`:\Steam", "$drive`:\SteamLibrary")) {
       if (Test-PathSafe $path) { $roots.Add($path) }
     }
@@ -75,7 +89,7 @@ function Get-SteamLibraries {
   $libraries = New-Object System.Collections.Generic.List[string]
   foreach ($root in Get-SteamRoots) {
     $libraries.Add($root)
-    $vdf = Join-Path $root "steamapps\libraryfolders.vdf"
+    $vdf = Join-PathSafe $root "steamapps\libraryfolders.vdf"
     if (Test-PathSafe $vdf) {
       $content = Get-Content -LiteralPath $vdf -Raw
       foreach ($match in [regex]::Matches($content, '"path"\s+"([^"]+)"')) {
@@ -90,16 +104,16 @@ function Get-SteamLibraries {
 function Find-StarfieldDirs {
   $dirs = New-Object System.Collections.Generic.List[string]
   foreach ($library in Get-SteamLibraries) {
-    $candidate = Join-Path $library "steamapps\common\Starfield"
-    if (Test-PathSafe (Join-Path $candidate "Starfield.exe")) { $dirs.Add($candidate) }
+    $candidate = Join-PathSafe $library "steamapps\common\Starfield"
+    if (Test-PathSafe (Join-PathSafe $candidate "Starfield.exe")) { $dirs.Add($candidate) }
   }
-  foreach ($drive in "C","D","E","F","G","H","I","J") {
+  foreach ($drive in Get-ExistingDriveLetters) {
     foreach ($candidate in @(
       "$drive`:\SteamLibrary\steamapps\common\Starfield",
       "$drive`:\Steam\steamapps\common\Starfield",
       "$drive`:\XboxGames\Starfield\Content"
     )) {
-      if (Test-PathSafe (Join-Path $candidate "Starfield.exe")) { $dirs.Add($candidate) }
+      if (Test-PathSafe (Join-PathSafe $candidate "Starfield.exe")) { $dirs.Add($candidate) }
     }
   }
   return $dirs | Select-Object -Unique
