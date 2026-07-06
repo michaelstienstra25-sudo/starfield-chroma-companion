@@ -93,7 +93,7 @@ This is an unofficial community project and is not affiliated with Bethesda, Raz
 - Game-event lighting for weapon fire, reloads, ammo changes, combat, hits, damage, bleedout, radiation/gas, O2 danger, loading, saving, and UI menus.
 - Scanner anomaly proximity effect with sustained purple/white glitch lighting while the scanner is active.
 - Temple, portal, power, Powers menu, and level-up effects with distinct visual styles.
-- Optional accent colors for mouse, mousepad, headset, and chromalink devices.
+- Optional state-aware accent colors for mouse, mousepad, headset, and chromalink devices.
 - Starfield-styled desktop launcher with one `START STARFIELD` button, tray status, settings, and advanced test panel.
 - Single-file setup assistant that detects Starfield, installs the companion, installs SFSE plugin DLLs, and creates optional Desktop/Start Menu shortcuts.
 - Configurable brightness, damage thresholds, logging, Chroma SDK URL, UDP port, and stale timeout.
@@ -252,7 +252,7 @@ Known limitations:
 - Requires the companion app to keep running while the game is active.
 - Some game moments are detected through reliable event patterns rather than direct official Starfield APIs.
 - This alpha has been tuned on one local setup and still needs broader hardware/game-version testing.
-- Keyboard effects are the most complete path right now. Mouse, mousepad, headset, and chromalink accent support exists, but needs more device reports, especially for Naga-class mice.
+- Keyboard effects are the most complete path right now. Mouse, mousepad, headset, and chromalink accent support now reacts to broad game states, but still needs more device reports, especially for Naga-class mice and Razer headsets.
 
 ## Alpha Highlights
 

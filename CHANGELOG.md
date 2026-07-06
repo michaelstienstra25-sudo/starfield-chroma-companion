@@ -18,6 +18,8 @@
 - Added safer setup drive detection for missing or disconnected Steam library drives.
 - Updated MO2 documentation with the extra unlock step after starting the companion.
 - Documented that keyboard effects are currently the primary supported path while mouse/Naga-class device support needs broader testing.
+- Started a balanced feedback pass based on early tester input: calmer idle lighting, WASD-focused breathing, radar-style scanner sweeps, and more deliberate combat/damage feedback.
+- Expanded accent device behavior so mouse, mousepad, headset, and chromalink receive stronger state-specific colors for damage, combat, scanner, ship, menu, and idle states.
 
 ## v0.1.2-alpha
 

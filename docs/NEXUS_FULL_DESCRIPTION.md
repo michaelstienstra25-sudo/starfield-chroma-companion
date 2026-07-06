@@ -13,7 +13,7 @@ The alpha includes a Starfield-styled desktop launcher with one START STARFIELD 
 
 The setup assistant can auto-detect Starfield, install the companion app, install the SFSE plugin DLLs, save the Starfield folder in the config, and create optional Desktop/Start Menu shortcuts.
 
-Keyboard effects are the most complete path right now. Mouse, mousepad, headset, and chromalink accent support exists, but I am still looking for more hardware reports, especially for Naga-class mice.
+Keyboard effects are the most complete path right now. Mouse, mousepad, headset, and chromalink accent support now reacts to broad game states such as damage, combat, scanner, ship, menu, and idle, but I am still looking for more hardware reports, especially for Naga-class mice and Razer headsets.
 
 Required software:
 

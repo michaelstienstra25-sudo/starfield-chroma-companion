@@ -163,6 +163,10 @@ class LightingState {
     this.gravJumpArmedUntil = 0;
     this.gravChargeUntil = 0;
     this.gravChargeLevel = 0;
+    this.movementPulseUntil = 0;
+    this.lastCombatAt = 0;
+    this.lastDamageAt = 0;
+    this.lastWeaponAt = 0;
   }
 
   push(type, ttl = 24) {
@@ -194,6 +198,14 @@ class LightingState {
     this.gravJumpArmedUntil = 0;
     this.gravChargeUntil = 0;
     this.gravChargeLevel = 0;
+    this.movementPulseUntil = 0;
+    this.lastCombatAt = 0;
+    this.lastDamageAt = 0;
+    this.lastWeaponAt = 0;
+  }
+
+  activateMovement(ms = 1800) {
+    this.movementPulseUntil = Date.now() + ms;
   }
 
   handleMenuEvent(event) {
@@ -350,12 +362,15 @@ class LightingState {
         this.handleMenuEvent(event);
         break;
       case "player.damage":
+        this.lastDamageAt = Date.now();
         this.push("damage", 24);
         break;
       case "player.trueDamage":
+        this.lastDamageAt = Date.now();
         this.push("trueDamage", 34);
         break;
       case "game.hit":
+        this.lastDamageAt = Date.now();
         this.push("trueDamage", 26);
         break;
       case "game.actorDamage":
@@ -511,10 +526,13 @@ class LightingState {
         break;
       case "player.combat":
         this.mode = "combat";
+        this.lastCombatAt = Date.now();
         this.push("combat", 30);
         break;
       case "weapon.fired":
       case "player.weaponFired":
+        this.lastWeaponAt = Date.now();
+        this.lastCombatAt = Date.now();
         this.push("weaponFired", 16);
         break;
       case "weapon.ammoChanged":
@@ -524,15 +542,19 @@ class LightingState {
         this.push("reload", 24);
         break;
       case "input.attack":
+        this.lastWeaponAt = Date.now();
+        this.lastCombatAt = Date.now();
         this.push("attack", 14);
         break;
       case "input.aim":
         this.push("aim", 16);
         break;
       case "input.jump":
+        this.activateMovement(1800);
         this.push("boost", 18);
         break;
       case "input.sprint":
+        this.activateMovement(2600);
         this.push("sprint", 20);
         break;
       case "input.scanner":
@@ -591,23 +613,35 @@ class LightingState {
   }
 
   paintGameplayZones(frame, stale) {
-    const steady = stale ? 0.32 : 0.8;
-    const steadySoft = stale ? 0.28 : 0.8;
-    const engine = stale ? 0.3 : 0.8;
+    const now = Date.now();
+    const heartbeat = 0.5 + Math.max(0, Math.sin((this.tick / 11) * Math.PI * 2)) ** 2 * 0.5;
+    const moving = now < this.movementPulseUntil;
+    const recentCombat = now - this.lastCombatAt < 9000;
+    const base = stale ? 0.12 : 0.18;
+    const focus = stale ? 0.18 : 0.28;
+    const movementBreath = moving ? 0.46 + Math.sin(this.tick * 0.82) * 0.12 : focus * heartbeat;
+    const utilityGlow = stale ? 0.12 : 0.18;
 
-    paint(frame, KeyZones.quickslots, scale(Colors.oxygen, steadySoft), 0.9);
-    paint(frame, KeyZones.movement, scale(Colors.scanner, steady), 0.95);
-    paint(frame, KeyZones.sprint, scale(Colors.engine, engine), 0.9);
-    paint(frame, KeyZones.jump, scale(Colors.engine, engine), 0.9);
-    paint(frame, KeyZones.interact, scale(Colors.constellation, stale ? 0.36 : 0.8), 0.92);
-    paint(frame, KeyZones.scanner, scale(Colors.scanner, stale ? 0.34 : 0.8), 0.92);
-    paint(frame, KeyZones.utility, scale(Colors.constellation, stale ? 0.28 : 0.8), 0.72);
-    paint(frame, KeyZones.systems, scale(Colors.menu, stale ? 0.28 : 0.8), 0.76);
+    for (let row = 0; row < 6; row += 1) {
+      for (let col = 0; col < 22; col += 1) {
+        const star = ((row * 19 + col * 13 + Math.floor(this.tick / 4)) % 71 === 0) ? 0.06 : 0;
+        frame[row][col] = scale(mix(Colors.void, Colors.constellation, star), base + star);
+      }
+    }
+
+    paint(frame, KeyZones.quickslots, scale(Colors.oxygen, utilityGlow), 0.48);
+    paint(frame, KeyZones.movement, scale(Colors.scanner, movementBreath), 0.9);
+    paint(frame, KeyZones.sprint, scale(Colors.engine, moving ? 0.42 : 0.18 * heartbeat), 0.72);
+    paint(frame, KeyZones.jump, scale(Colors.engine, moving ? 0.38 : 0.15 * heartbeat), 0.65);
+    paint(frame, KeyZones.interact, scale(Colors.constellation, recentCombat ? 0.42 : 0.24), 0.74);
+    paint(frame, KeyZones.scanner, scale(Colors.scanner, stale ? 0.18 : 0.26), 0.78);
+    paint(frame, KeyZones.utility, scale(Colors.constellation, utilityGlow), 0.52);
+    paint(frame, KeyZones.systems, scale(Colors.menu, stale ? 0.1 : 0.16), 0.48);
 
     const combatLift = this.mode === "combat" ? 0.18 : 0;
     if (combatLift > 0) paint(frame, KeyZones.interact, scale(Colors.warning, combatLift), 0.45);
 
-    const shipColor = this.mode === "shipCombat" ? Colors.warning : this.mode === "ship" ? Colors.grav : scale(Colors.grav, 0.48);
+    const shipColor = this.mode === "shipCombat" ? scale(Colors.warning, 0.72) : this.mode === "ship" ? scale(Colors.grav, 0.58) : scale(Colors.grav, 0.16);
     paint(frame, KeyZones.ship, shipColor, 0.85);
 
     if (this.mode === "menu") {
@@ -879,7 +913,7 @@ class LightingState {
   }
 
   scannerPulse(frame, progress, strength) {
-    this.sweepPulse(frame, Colors.scanner, progress, strength * 0.8);
+    this.radarPulse(frame, Colors.scanner, progress, strength * 0.9);
     paint(frame, KeyZones.scanner, pulseScale(Colors.scanner, strength), 0.98);
     paint(frame, KeyZones.utility, pulseScale(Colors.scanner, strength * 0.85), 0.78);
   }
@@ -919,7 +953,7 @@ class LightingState {
     paint(frame, KeyZones.scanner, pulseScale(Colors.starlight, (0.7 + level * 0.95) * shimmer), 0.98);
     paint(frame, KeyZones.utility, pulseScale(Colors.grav, (0.48 + level * 0.72) * breath), 0.96);
     paint(frame, KeyZones.systems, pulseScale(Colors.oxygen, (0.25 + level * 0.58) * shimmer), 0.7 + level * 0.28);
-    this.sweepPulse(frame, Colors.grav, sweepProgress, 0.3 + level * 0.78);
+    this.radarPulse(frame, Colors.grav, sweepProgress, 0.34 + level * 0.82);
     if (level > 0.35) this.centerPulse(frame, Colors.starlight, sweepProgress, (level - 0.22) * 0.48);
     if (level > 0.62) this.edgeFlash(frame, Colors.grav, (level - 0.48) * 0.55);
   }
@@ -1017,6 +1051,76 @@ class LightingState {
         if (band > 0.04) frame[row][col] = mix(frame[row][col], scale(color, band), 0.9);
       }
     }
+  }
+
+  radarPulse(frame, color, progress, strength) {
+    const angle = progress * Math.PI * 2;
+    const radius = 0.8 + progress * 3.8;
+    for (let row = 0; row < 6; row += 1) {
+      for (let col = 0; col < 22; col += 1) {
+        const x = (col - 10.5) * 0.34;
+        const y = row - 2.5;
+        const distance = Math.hypot(x, y);
+        const pointAngle = Math.atan2(y, x);
+        const angular = Math.abs(Math.atan2(Math.sin(pointAngle - angle), Math.cos(pointAngle - angle)));
+        const sweep = Math.max(0, 1 - angular / 0.55);
+        const ring = Math.max(0, 1 - Math.abs(distance - radius) / 0.75);
+        const amount = Math.max(sweep * 0.58, ring * 0.76) * strength;
+        if (amount > 0.025) frame[row][col] = mix(frame[row][col], pulseScale(color, amount), 0.9);
+      }
+    }
+  }
+
+  accentState() {
+    const now = Date.now();
+    const pulse = 0.62 + Math.sin(this.tick * 0.34) * 0.22;
+    if (now - this.lastDamageAt < 1800 || this.mode === "critical") {
+      return {
+        mouse: pulseScale(Colors.damage, 0.95 * pulse),
+        mousepad: pulseScale(Colors.warning, 0.82 * pulse),
+        headset: pulseScale(Colors.damage, 0.74 * pulse),
+        chromalink: pulseScale(Colors.damage, 0.68 * pulse),
+      };
+    }
+    if (now - this.lastWeaponAt < 1200 || this.mode === "combat" || this.mode === "shipCombat") {
+      return {
+        mouse: pulseScale(Colors.warning, 0.86 * pulse),
+        mousepad: pulseScale(Colors.damage, 0.54 * pulse),
+        headset: pulseScale(Colors.warning, 0.48 * pulse),
+        chromalink: pulseScale(Colors.engine, 0.62 * pulse),
+      };
+    }
+    if (this.scannerOpen || Date.now() < this.scannerActiveUntil) {
+      const level = Math.max(0.28, this.scannerAnomalyLevel);
+      return {
+        mouse: pulseScale(Colors.scanner, 0.54 + level * 0.3),
+        mousepad: pulseScale(Colors.grav, 0.28 + level * 0.48),
+        headset: pulseScale(Colors.oxygen, 0.32 + level * 0.36),
+        chromalink: pulseScale(Colors.scanner, 0.34 + level * 0.34),
+      };
+    }
+    if (this.mode === "ship") {
+      return {
+        mouse: scale(Colors.grav, 0.56 * pulse),
+        mousepad: scale(Colors.oxygen, 0.42 * pulse),
+        headset: scale(Colors.grav, 0.36 * pulse),
+        chromalink: scale(Colors.engine, 0.44 * pulse),
+      };
+    }
+    if (this.mode === "menu") {
+      return {
+        mouse: scale(Colors.menu, 0.42),
+        mousepad: scale(Colors.constellation, 0.34),
+        headset: scale(Colors.menu, 0.32),
+        chromalink: scale(Colors.oxygen, 0.3),
+      };
+    }
+    return {
+      mouse: scale(Colors.scanner, 0.3 * pulse),
+      mousepad: scale(Colors.constellation, 0.24 * pulse),
+      headset: scale(Colors.oxygen, 0.22 * pulse),
+      chromalink: scale(Colors.grav, 0.22 * pulse),
+    };
   }
 }
 
@@ -1133,12 +1237,12 @@ class ChromaClient {
 
   async accentDevices(state) {
     if (!CONFIG.accentDevices) return;
-    const base = state.mode === "critical" ? Colors.damage : state.mode === "combat" ? Colors.warning : state.mode === "menu" ? Colors.menu : state.mode === "ship" ? Colors.grav : Colors.constellation;
+    const accent = state.accentState();
     await Promise.all([
-      this.staticDevice("mouse", base),
-      this.staticDevice("mousepad", scale(base, 0.8)),
-      this.staticDevice("headset", scale(Colors.oxygen, 0.7)),
-      this.staticDevice("chromalink", scale(Colors.engine, 0.75)),
+      this.staticDevice("mouse", accent.mouse),
+      this.staticDevice("mousepad", accent.mousepad),
+      this.staticDevice("headset", accent.headset),
+      this.staticDevice("chromalink", accent.chromalink),
     ]);
   }
 }
