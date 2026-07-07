@@ -24,6 +24,39 @@ $appIconPath = Join-Path $root "assets\starfield-chroma.ico"
 $node = "node.exe"
 $url = "http://127.0.0.1:47322"
 
+Add-Type -TypeDefinition @"
+using System;
+using System.Runtime.InteropServices;
+public static class StarfieldChromaWindow {
+  [DllImport("user32.dll")]
+  public static extern bool ShowWindowAsync(IntPtr hWnd, int nCmdShow);
+  [DllImport("user32.dll")]
+  public static extern bool SetForegroundWindow(IntPtr hWnd);
+}
+"@
+
+function Show-ExistingAppWindow {
+  try {
+    $currentId = $PID
+    $existing = Get-Process -Name "StarfieldChromaCompanion" -ErrorAction SilentlyContinue |
+      Where-Object { $_.Id -ne $currentId -and $_.MainWindowHandle -ne 0 } |
+      Select-Object -First 1
+    if ($existing) {
+      [StarfieldChromaWindow]::ShowWindowAsync($existing.MainWindowHandle, 9) | Out-Null
+      [StarfieldChromaWindow]::SetForegroundWindow($existing.MainWindowHandle) | Out-Null
+    }
+  } catch {
+    # The second instance should still exit even if Windows refuses focus stealing.
+  }
+}
+
+$createdNew = $false
+$appMutex = New-Object System.Threading.Mutex($true, "Global\StarfieldChromaCompanion.App", [ref]$createdNew)
+if (-not $createdNew) {
+  Show-ExistingAppWindow
+  return
+}
+
 Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing
 
@@ -454,4 +487,15 @@ $timer.Start()
 
 Start-Launcher
 Update-StatusUi
-[System.Windows.Forms.Application]::Run($mainForm)
+try {
+  [System.Windows.Forms.Application]::Run($mainForm)
+} finally {
+  if ($notify) {
+    $notify.Visible = $false
+    $notify.Dispose()
+  }
+  if ($appMutex) {
+    $appMutex.ReleaseMutex()
+    $appMutex.Dispose()
+  }
+}

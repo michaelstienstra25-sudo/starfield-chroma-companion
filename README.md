@@ -30,17 +30,17 @@ From there you can:
 - Keep companion and Starfield status visible from the tray icon.
 - Open Settings for brightness, pulse strength, damage thresholds, logging, and your Starfield folder.
 - Open Razer Chroma to check the required Chroma Apps setting.
-- Open the Advanced Panel for Chroma SDK checks and test effects.
+- Open the Advanced Panel for Chroma SDK checks, effect previews, and multi-device focus tests.
 
 ## Install With Setup Assistant
 
 The easiest install option for most users is the single-file setup assistant:
 
 ```text
-StarfieldChromaCompanionSetup-v0.1.3-alpha.exe
+StarfieldChromaCompanionSetup-v0.1.4-alpha.exe
 ```
 
-1. Run `StarfieldChromaCompanionSetup-v0.1.3-alpha.exe`.
+1. Run `StarfieldChromaCompanionSetup-v0.1.4-alpha.exe`.
 2. The setup assistant searches Steam libraries and common install paths for Starfield.
 3. If Starfield is not detected, browse to the folder that contains `sfse_loader.exe`.
 4. Click `Install`.
@@ -93,7 +93,9 @@ This is an unofficial community project and is not affiliated with Bethesda, Raz
 - Game-event lighting for weapon fire, reloads, ammo changes, combat, hits, damage, bleedout, radiation/gas, O2 danger, loading, saving, and UI menus.
 - Scanner anomaly proximity effect with sustained purple/white glitch lighting while the scanner is active.
 - Temple, portal, power, Powers menu, and level-up effects with distinct visual styles.
-- Optional state-aware accent colors for mouse, mousepad, headset, and chromalink devices.
+- Multi-device Chroma support for keyboard, mouse, mousepad, headset, and chromalink devices.
+- Custom 9x7 mouse effects for combat, damage, scanner anomalies, grav/power moments, O2/gas warnings, rewards, menus, and idle state.
+- Stronger headset, mousepad, and chromalink pulses for damage, combat, scanner, ship, menu, power, and exploration moments.
 - Starfield-styled desktop launcher with one `START STARFIELD` button, tray status, settings, and advanced test panel.
 - Single-file setup assistant that detects Starfield, installs the companion, installs SFSE plugin DLLs, and creates optional Desktop/Start Menu shortcuts.
 - Configurable brightness, damage thresholds, logging, Chroma SDK URL, UDP port, and stale timeout.
@@ -252,7 +254,7 @@ Known limitations:
 - Requires the companion app to keep running while the game is active.
 - Some game moments are detected through reliable event patterns rather than direct official Starfield APIs.
 - This alpha has been tuned on one local setup and still needs broader hardware/game-version testing.
-- Keyboard effects are the most complete path right now. Mouse, mousepad, headset, and chromalink accent support now reacts to broad game states, but still needs more device reports, especially for Naga-class mice and Razer headsets.
+- Multi-device Chroma support is now active for keyboard, mouse, mousepad, headset, and chromalink devices. Hardware behavior can still vary by device model, so reports from Naga-class mice, Razer headsets, mousepads, and Chroma Link setups are especially useful.
 
 ## Alpha Highlights
 

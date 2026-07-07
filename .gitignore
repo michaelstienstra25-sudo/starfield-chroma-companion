@@ -1,6 +1,7 @@
 # Logs and local runtime state
 *.log
 *.err.log
+.runtime/
 
 # Local release artifacts
 release/

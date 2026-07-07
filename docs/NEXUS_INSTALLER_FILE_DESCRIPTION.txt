@@ -1,6 +1,6 @@
 Recommended installer for most users.
 
-Run StarfieldChromaCompanionSetup-v0.1.3-alpha.exe.
+Run StarfieldChromaCompanionSetup-v0.1.4-alpha.exe.
 
 The setup assistant:
 - Searches Steam libraries and common install paths for Starfield.
@@ -11,6 +11,7 @@ The setup assistant:
 - Installs the companion launcher app to %LOCALAPPDATA%\StarfieldChromaCompanion.
 - Saves the selected Starfield folder in the config.
 - Lets you choose Desktop and Start Menu shortcuts.
+- Includes the multi-device Chroma alpha with keyboard, mouse, mousepad, headset, and chromalink support.
 
 After installing, open Razer Chroma and make sure CHROMA APPS is enabled. If Chroma Apps is disabled, the keyboard may stay on Spectrum Cycling even though the SDK connection succeeds.
 

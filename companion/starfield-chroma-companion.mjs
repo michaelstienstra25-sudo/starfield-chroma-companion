@@ -48,6 +48,8 @@ const CHROMA_ROOT = CONFIG.chromaRoot;
 const UDP_PORT = CONFIG.udpPort;
 const FRAME_MS = CONFIG.frameMs;
 const STALE_MS = CONFIG.staleMs;
+const LOCK_DIR = path.resolve(SCRIPT_DIR, "..", ".runtime", "companion.lock");
+const LOCK_INFO = path.join(LOCK_DIR, "owner.json");
 
 function parseFormId(id) {
   if (typeof id === "number") return id;
@@ -133,8 +135,15 @@ const KeyZones = {
   menus: [[0, 0], [0, 1], [0, 2], [0, 3], [0, 4], [0, 5], [0, 6], [0, 7], [0, 8], [0, 9], [0, 10], [0, 11], [2, 1]],
 };
 
+const MouseRows = 9;
+const MouseCols = 7;
+
 function emptyFrame(fill = Colors.void) {
   return Array.from({ length: 6 }, () => Array.from({ length: 22 }, () => fill));
+}
+
+function emptyMouseFrame(fill = Colors.off) {
+  return Array.from({ length: MouseRows }, () => Array.from({ length: MouseCols }, () => fill));
 }
 
 function set(frame, row, col, color) {
@@ -146,6 +155,50 @@ function paint(frame, zone, color, intensity = 1) {
     const current = frame[row]?.[col] ?? Colors.off;
     set(frame, row, col, mix(current, color, intensity));
   }
+}
+
+function mouseAccentFrame(primary, secondary, style, tick) {
+  const frame = emptyMouseFrame(scale(primary, 0.18));
+  const pulse = 0.55 + Math.max(0, Math.sin(tick * 0.68)) * 0.45;
+  const slow = 0.52 + Math.sin(tick * 0.14) * 0.18;
+
+  for (let row = 0; row < MouseRows; row += 1) {
+    for (let col = 0; col < MouseCols; col += 1) {
+      const x = col - 3;
+      const y = row - 4;
+      const distance = Math.hypot(x * 0.9, y * 0.62);
+      let amount = 0.18;
+      let color = primary;
+
+      if (style === "damage") {
+        amount = 0.56 + pulse * 0.52;
+        color = row < 2 || col === 0 || col === MouseCols - 1 ? secondary : primary;
+      } else if (style === "combat") {
+        const trigger = row <= 2 || (row <= 4 && (col <= 1 || col >= 5));
+        amount = trigger ? 0.72 + pulse * 0.42 : 0.24 + pulse * 0.22;
+        color = trigger ? secondary : primary;
+      } else if (style === "scanner") {
+        const sweep = Math.max(0, 1 - Math.abs(distance - ((tick % 24) / 24) * 5.6) / 0.9);
+        amount = 0.24 + sweep * 0.86 + slow * 0.16;
+        color = mix(primary, secondary, Math.min(1, sweep + 0.22));
+      } else if (style === "grav" || style === "reward") {
+        const spiral = Math.max(0, Math.sin(distance * 3.1 - tick * 0.22 + Math.atan2(y, x) * 2.2));
+        amount = 0.26 + spiral * 0.76 + slow * 0.18;
+        color = mix(primary, secondary, Math.min(1, spiral * 0.78 + 0.2));
+      } else if (style === "oxygen") {
+        const edge = col === 0 || col === MouseCols - 1 || row === 0 || row === MouseRows - 1;
+        amount = edge ? 0.55 + pulse * 0.45 : 0.24 + slow * 0.22;
+        color = edge ? secondary : primary;
+      } else {
+        amount = 0.22 + slow * 0.2;
+        color = row <= 1 ? secondary : primary;
+      }
+
+      frame[row][col] = pulseScale(color, amount);
+    }
+  }
+
+  return frame;
 }
 
 class LightingState {
@@ -164,6 +217,7 @@ class LightingState {
     this.gravChargeUntil = 0;
     this.gravChargeLevel = 0;
     this.movementPulseUntil = 0;
+    this.templeCinematicUntil = 0;
     this.lastCombatAt = 0;
     this.lastDamageAt = 0;
     this.lastWeaponAt = 0;
@@ -199,6 +253,7 @@ class LightingState {
     this.gravChargeUntil = 0;
     this.gravChargeLevel = 0;
     this.movementPulseUntil = 0;
+    this.templeCinematicUntil = 0;
     this.lastCombatAt = 0;
     this.lastDamageAt = 0;
     this.lastWeaponAt = 0;
@@ -221,6 +276,12 @@ class LightingState {
       if (menu === "GalaxyStarMapMenu") {
         this.gravJumpArmedUntil = now + 18000;
         this.activateGravCharge(0.1);
+      }
+      if (menu === "PlayBinkMenu") {
+        this.templeCinematicUntil = now + 6500;
+        this.mode = "explore";
+        this.push("powerUse", 86);
+        this.push("artifact", 82);
       }
       if (["DataMenu", "PauseMenu", "InventoryMenu", "SkillsMenu", "BSMissionMenu", "GalaxyStarMapMenu", "SpaceshipEditorMenu", "PowersMenu", "FavoritesMenu"].includes(menu)) {
         this.mode = "explore";
@@ -249,9 +310,10 @@ class LightingState {
         this.push("load", 28);
         return;
       case "PlayBinkMenu":
-        this.mode = "boot";
-        this.push("powerUse", 110);
-        this.push("artifact", 96);
+        this.mode = "explore";
+        this.templeCinematicUntil = now + 26000;
+        this.push("powerUse", 160);
+        this.push("artifact", 150);
         return;
       case "PauseMenu":
       case "DataMenu":
@@ -606,6 +668,7 @@ class LightingState {
     const stale = Date.now() - this.lastGameEvent > STALE_MS;
     const frame = emptyFrame(Colors.off);
     this.paintGameplayZones(frame, stale);
+    this.paintTempleCinematicState(frame);
     this.paintPulses(frame);
     this.paintGravChargeState(frame);
     this.paintScannerAnomalyState(frame);
@@ -918,6 +981,34 @@ class LightingState {
     paint(frame, KeyZones.utility, pulseScale(Colors.scanner, strength * 0.85), 0.78);
   }
 
+  paintTempleCinematicState(frame) {
+    const now = Date.now();
+    if (now > this.templeCinematicUntil) return;
+
+    const remaining = Math.max(0, this.templeCinematicUntil - now);
+    const fade = Math.min(1, remaining / 2400);
+    const cycle = (this.tick % 96) / 96;
+    const hum = 0.64 + Math.sin(this.tick * 0.13) * 0.18;
+
+    for (let row = 0; row < 6; row += 1) {
+      for (let col = 0; col < 22; col += 1) {
+        const x = (col - 10.5) * 0.32;
+        const y = row - 2.5;
+        const distance = Math.hypot(x, y);
+        const spiral = Math.max(0, Math.sin(distance * 3.1 - cycle * Math.PI * 8 + Math.atan2(y, x) * 2.4));
+        const star = ((row * 17 + col * 7 + Math.floor(this.tick / 2)) % 29 === 0) ? 0.25 : 0;
+        const color = mix(Colors.grav, Colors.starlight, Math.min(1, spiral * 0.68 + star));
+        const amount = (0.14 + spiral * 0.34 + star) * fade * hum;
+        if (amount > 0.03) frame[row][col] = mix(frame[row][col], pulseScale(color, amount), 0.82);
+      }
+    }
+
+    paint(frame, KeyZones.scanner, pulseScale(Colors.starlight, 0.72 * fade * hum), 0.98);
+    paint(frame, KeyZones.utility, pulseScale(Colors.grav, 0.66 * fade), 0.92);
+    paint(frame, KeyZones.systems, pulseScale(Colors.oxygen, 0.42 * fade * hum), 0.72);
+    this.centerPulse(frame, Colors.starlight, cycle, 0.24 * fade);
+  }
+
   paintScannerAnomalyState(frame) {
     const now = Date.now();
     const anomalyRecentlySeen = now - this.lastScannerAnomalySeen < 120000;
@@ -1071,55 +1162,129 @@ class LightingState {
     }
   }
 
+  activePulseStrength(types) {
+    const wanted = new Set(types);
+    let strength = 0;
+    for (const pulse of this.pulses) {
+      if (!wanted.has(pulse.type)) continue;
+      const progress = pulse.age / Math.max(1, pulse.ttl);
+      strength = Math.max(strength, Math.max(0, 1 - progress));
+    }
+    return strength;
+  }
+
   accentState() {
     const now = Date.now();
     const pulse = 0.62 + Math.sin(this.tick * 0.34) * 0.22;
-    if (now - this.lastDamageAt < 1800 || this.mode === "critical") {
+    const fastPulse = 0.6 + Math.max(0, Math.sin(this.tick * 0.82)) * 0.4;
+    const slowPulse = 0.58 + Math.sin(this.tick * 0.14) * 0.16;
+    const damage = Math.max(
+      this.activePulseStrength(["damage", "trueDamage", "chipDamage", "critical", "lifeState", "bleedout"]),
+      now - this.lastDamageAt < 1800 ? 0.7 : 0,
+      this.mode === "critical" ? 0.9 : 0,
+    );
+    const oxygen = this.activePulseStrength(["oxygenDanger", "radiation", "vitals"]);
+    const combat = Math.max(
+      this.activePulseStrength(["combat", "shipCombat", "weaponFired", "attack", "reload", "ammo"]),
+      now - this.lastWeaponAt < 1200 ? 0.74 : 0,
+      this.mode === "combat" || this.mode === "shipCombat" ? 0.58 : 0,
+    );
+    const scanner = Math.max(
+      this.activePulseStrength(["scanner", "scanComplete", "surveyComplete", "digipick", "aim"]),
+      this.scannerOpen || now < this.scannerActiveUntil ? 0.5 : 0,
+      this.scannerAnomalyLevel,
+    );
+    const grav = Math.max(
+      this.activePulseStrength(["grav", "gravCharge", "gravWarp", "takeoff"]),
+      this.gravChargeLevel,
+      this.mode === "ship" ? 0.45 : 0,
+      this.mode === "shipCombat" ? 0.58 : 0,
+    );
+    const reward = this.activePulseStrength(["powerUse", "artifact", "levelUp", "rareLoot", "questComplete", "questUpdate", "save", "saved", "load", "boot"]);
+
+    if (damage > 0.05) {
+      const hit = Math.max(damage, fastPulse * 0.75);
       return {
-        mouse: pulseScale(Colors.damage, 0.95 * pulse),
-        mousepad: pulseScale(Colors.warning, 0.82 * pulse),
-        headset: pulseScale(Colors.damage, 0.74 * pulse),
-        chromalink: pulseScale(Colors.damage, 0.68 * pulse),
+        mouse: pulseScale(Colors.damage, 0.82 + hit * 0.5),
+        mouseAlt: pulseScale(Colors.warning, 0.72 + hit * 0.42),
+        mouseStyle: "damage",
+        mousepad: pulseScale(mix(Colors.damage, Colors.warning, 0.35), 0.58 + hit * 0.5),
+        headset: pulseScale(Colors.damage, 0.92 + hit * 0.58),
+        chromalink: pulseScale(Colors.damage, 0.55 + hit * 0.42),
       };
     }
-    if (now - this.lastWeaponAt < 1200 || this.mode === "combat" || this.mode === "shipCombat") {
+    if (oxygen > 0.05) {
+      const alert = 0.58 + oxygen * fastPulse;
       return {
-        mouse: pulseScale(Colors.warning, 0.86 * pulse),
-        mousepad: pulseScale(Colors.damage, 0.54 * pulse),
-        headset: pulseScale(Colors.warning, 0.48 * pulse),
-        chromalink: pulseScale(Colors.engine, 0.62 * pulse),
+        mouse: pulseScale(mix(Colors.oxygen, Colors.co2, 0.45), 0.58 + oxygen * 0.42),
+        mouseAlt: pulseScale(Colors.co2, 0.72 + oxygen * 0.5),
+        mouseStyle: "oxygen",
+        mousepad: pulseScale(mix(Colors.oxygen, Colors.co2, 0.72), 0.48 + oxygen * 0.48),
+        headset: pulseScale(mix(Colors.oxygen, Colors.co2, 0.85), 0.76 + alert * 0.42),
+        chromalink: pulseScale(Colors.co2, 0.36 + oxygen * 0.38),
       };
     }
-    if (this.scannerOpen || Date.now() < this.scannerActiveUntil) {
-      const level = Math.max(0.28, this.scannerAnomalyLevel);
+    if (combat > 0.05) {
+      const fire = 0.5 + combat * fastPulse;
       return {
-        mouse: pulseScale(Colors.scanner, 0.54 + level * 0.3),
-        mousepad: pulseScale(Colors.grav, 0.28 + level * 0.48),
-        headset: pulseScale(Colors.oxygen, 0.32 + level * 0.36),
-        chromalink: pulseScale(Colors.scanner, 0.34 + level * 0.34),
+        mouse: pulseScale(Colors.warning, 0.72 + fire * 0.52),
+        mouseAlt: pulseScale(Colors.damage, 0.58 + fire * 0.5),
+        mouseStyle: "combat",
+        mousepad: pulseScale(mix(Colors.warning, Colors.damage, 0.45), 0.34 + combat * 0.46),
+        headset: pulseScale(Colors.engine, 0.44 + combat * 0.42),
+        chromalink: pulseScale(Colors.engine, 0.42 + combat * 0.42),
       };
     }
-    if (this.mode === "ship") {
+    if (scanner > 0.05) {
+      const level = Math.max(0.28, scanner);
       return {
-        mouse: scale(Colors.grav, 0.56 * pulse),
-        mousepad: scale(Colors.oxygen, 0.42 * pulse),
-        headset: scale(Colors.grav, 0.36 * pulse),
-        chromalink: scale(Colors.engine, 0.44 * pulse),
+        mouse: pulseScale(Colors.scanner, 0.52 + level * 0.52),
+        mouseAlt: pulseScale(Colors.grav, 0.46 + level * 0.52),
+        mouseStyle: "scanner",
+        mousepad: pulseScale(mix(Colors.scanner, Colors.grav, Math.min(1, level * 0.7)), 0.32 + level * 0.58),
+        headset: pulseScale(Colors.oxygen, 0.42 + level * 0.5),
+        chromalink: pulseScale(Colors.scanner, 0.34 + level * 0.42),
+      };
+    }
+    if (grav > 0.05) {
+      const drive = 0.44 + grav * slowPulse;
+      return {
+        mouse: pulseScale(Colors.grav, 0.54 + grav * 0.5),
+        mouseAlt: pulseScale(Colors.oxygen, 0.42 + grav * 0.46),
+        mouseStyle: "grav",
+        mousepad: pulseScale(mix(Colors.grav, Colors.oxygen, 0.38), drive),
+        headset: pulseScale(Colors.grav, 0.46 + grav * 0.46),
+        chromalink: pulseScale(Colors.engine, 0.36 + grav * 0.42),
+      };
+    }
+    if (reward > 0.05) {
+      const glow = 0.45 + reward * pulse;
+      return {
+        mouse: pulseScale(mix(Colors.quest, Colors.starlight, 0.38), 0.18 + glow),
+        mouseAlt: pulseScale(Colors.grav, 0.48 + reward * 0.5),
+        mouseStyle: "reward",
+        mousepad: pulseScale(mix(Colors.quest, Colors.grav, 0.28), 0.34 + reward * 0.46),
+        headset: pulseScale(Colors.starlight, 0.46 + reward * 0.52),
+        chromalink: pulseScale(Colors.quest, 0.3 + reward * 0.38),
       };
     }
     if (this.mode === "menu") {
       return {
         mouse: scale(Colors.menu, 0.42),
+        mouseAlt: scale(Colors.constellation, 0.36),
+        mouseStyle: "ambient",
         mousepad: scale(Colors.constellation, 0.34),
         headset: scale(Colors.menu, 0.32),
         chromalink: scale(Colors.oxygen, 0.3),
       };
     }
     return {
-      mouse: scale(Colors.scanner, 0.3 * pulse),
-      mousepad: scale(Colors.constellation, 0.24 * pulse),
-      headset: scale(Colors.oxygen, 0.22 * pulse),
-      chromalink: scale(Colors.grav, 0.22 * pulse),
+      mouse: scale(Colors.scanner, 0.18 + 0.18 * slowPulse),
+      mouseAlt: scale(Colors.constellation, 0.2 + 0.18 * slowPulse),
+      mouseStyle: "ambient",
+      mousepad: scale(Colors.constellation, 0.16 + 0.16 * slowPulse),
+      headset: scale(Colors.oxygen, 0.14 + 0.14 * slowPulse),
+      chromalink: scale(Colors.grav, 0.13 + 0.13 * slowPulse),
     };
   }
 }
@@ -1173,6 +1338,10 @@ async function requestJsonWithRetry(method, url, body, attempts = 6) {
   throw lastError;
 }
 
+function isTransientChromaError(error) {
+  return ["ECONNREFUSED", "ECONNRESET", "ETIMEDOUT"].includes(error?.code);
+}
+
 class ChromaClient {
   constructor() {
     this.uri = null;
@@ -1180,6 +1349,7 @@ class ChromaClient {
     this.lastKeyboardFrame = "";
     this.lastKeyboardSentAt = 0;
     this.lastStatic = new Map();
+    this.lastCustom = new Map();
   }
 
   async init() {
@@ -1195,12 +1365,33 @@ class ChromaClient {
     if (!response.uri) throw new Error(`Chroma init failed: ${JSON.stringify(response)}`);
     this.uri = response.uri;
     console.log(`[chroma] session ${response.sessionid} ${this.uri}`);
-    await requestJsonWithRetry("PUT", `${this.uri}/heartbeat`);
+    try {
+      await requestJsonWithRetry("PUT", `${this.uri}/heartbeat`, undefined, 12);
+    } catch (error) {
+      this.resetSession();
+      throw error;
+    }
     this.heartbeatTimer = setInterval(() => this.heartbeat().catch(() => {}), 1000);
   }
 
   async heartbeat() {
-    if (this.uri) await requestJsonWithRetry("PUT", `${this.uri}/heartbeat`);
+    if (!this.uri) return;
+    try {
+      await requestJsonWithRetry("PUT", `${this.uri}/heartbeat`);
+    } catch (error) {
+      if (isTransientChromaError(error)) this.resetSession();
+      throw error;
+    }
+  }
+
+  resetSession() {
+    if (this.heartbeatTimer) clearInterval(this.heartbeatTimer);
+    this.heartbeatTimer = null;
+    this.uri = null;
+    this.lastKeyboardFrame = "";
+    this.lastKeyboardSentAt = 0;
+    this.lastStatic.clear();
+    this.lastCustom.clear();
   }
 
   async uninit() {
@@ -1219,27 +1410,58 @@ class ChromaClient {
     if (frameJson === this.lastKeyboardFrame && now - this.lastKeyboardSentAt < CONFIG.forceRefreshMs) return;
     this.lastKeyboardFrame = frameJson;
     this.lastKeyboardSentAt = now;
-    await requestJsonWithRetry("PUT", `${this.uri}/keyboard`, {
-      effect: "CHROMA_CUSTOM",
-      param: frame,
-    });
+    try {
+      await requestJsonWithRetry("PUT", `${this.uri}/keyboard`, {
+        effect: "CHROMA_CUSTOM",
+        param: frame,
+      });
+    } catch (error) {
+      if (isTransientChromaError(error)) this.resetSession();
+      throw error;
+    }
   }
 
   async staticDevice(device, color) {
     await this.init();
     if (this.lastStatic.get(device) === color) return;
     this.lastStatic.set(device, color);
-    await requestJsonWithRetry("PUT", `${this.uri}/${device}`, {
-      effect: "CHROMA_STATIC",
-      param: { color },
-    }).catch(() => {});
+    try {
+      await requestJsonWithRetry("PUT", `${this.uri}/${device}`, {
+        effect: "CHROMA_STATIC",
+        param: { color },
+      });
+    } catch (error) {
+      if (isTransientChromaError(error)) this.resetSession();
+    }
+  }
+
+  async customMouse(accent, tick) {
+    await this.init();
+    const frame = mouseAccentFrame(
+      accent.mouse,
+      accent.mouseAlt ?? accent.mouse,
+      accent.mouseStyle ?? "ambient",
+      tick,
+    );
+    const frameJson = JSON.stringify(frame);
+    if (this.lastCustom.get("mouse") === frameJson) return;
+    this.lastCustom.set("mouse", frameJson);
+    try {
+      await requestJsonWithRetry("PUT", `${this.uri}/mouse`, {
+        effect: "CHROMA_CUSTOM2",
+        param: frame,
+      });
+    } catch (error) {
+      if (isTransientChromaError(error)) this.resetSession();
+      await this.staticDevice("mouse", accent.mouse);
+    }
   }
 
   async accentDevices(state) {
     if (!CONFIG.accentDevices) return;
     const accent = state.accentState();
     await Promise.all([
-      this.staticDevice("mouse", accent.mouse),
+      this.customMouse(accent, state.tick),
       this.staticDevice("mousepad", accent.mousepad),
       this.staticDevice("headset", accent.headset),
       this.staticDevice("chromalink", accent.chromalink),
@@ -1255,6 +1477,54 @@ function parseEvent(message) {
   }
 }
 
+function isProcessAlive(pid) {
+  if (!Number.isFinite(pid) || pid <= 0) return false;
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function acquireCompanionLock() {
+  fs.mkdirSync(path.dirname(LOCK_DIR), { recursive: true });
+  try {
+    fs.mkdirSync(LOCK_DIR);
+  } catch (error) {
+    if (error.code !== "EEXIST") throw error;
+    let owner = {};
+    try {
+      owner = JSON.parse(fs.readFileSync(LOCK_INFO, "utf8"));
+    } catch {
+      owner = {};
+    }
+    if (isProcessAlive(Number(owner.pid))) {
+      console.log(`[single-instance] companion already running as pid ${owner.pid}`);
+      return false;
+    }
+    fs.rmSync(LOCK_DIR, { recursive: true, force: true });
+    fs.mkdirSync(LOCK_DIR);
+  }
+
+  fs.writeFileSync(LOCK_INFO, JSON.stringify({
+    pid: process.pid,
+    startedAt: new Date().toISOString(),
+  }, null, 2), "utf8");
+  return true;
+}
+
+function releaseCompanionLock() {
+  try {
+    const owner = JSON.parse(fs.readFileSync(LOCK_INFO, "utf8"));
+    if (Number(owner.pid) === process.pid) {
+      fs.rmSync(LOCK_DIR, { recursive: true, force: true });
+    }
+  } catch {
+    // Best-effort cleanup only.
+  }
+}
+
 async function startRenderer(chroma, state) {
   let busy = false;
   return setInterval(async () => {
@@ -1262,7 +1532,7 @@ async function startRenderer(chroma, state) {
     busy = true;
     try {
       await chroma.keyboard(state.nextFrame());
-      if (state.tick % 18 === 0) await chroma.accentDevices(state);
+      if (state.tick % 6 === 0) await chroma.accentDevices(state);
     } catch (error) {
       console.error(`[chroma] ${error.message}`);
     } finally {
@@ -1301,21 +1571,31 @@ async function runDemo() {
 }
 
 async function runServer() {
+  if (!acquireCompanionLock()) return;
   const chroma = new ChromaClient();
   const state = new LightingState();
   const socket = dgram.createSocket("udp4");
   const renderer = await startRenderer(chroma, state);
+  let closed = false;
 
   async function close() {
+    if (closed) return;
+    closed = true;
     clearInterval(renderer);
     socket.close();
     await chroma.uninit();
+    releaseCompanionLock();
   }
 
   process.on("SIGINT", async () => {
     await close();
     process.exit(0);
   });
+  process.on("SIGTERM", async () => {
+    await close();
+    process.exit(0);
+  });
+  process.on("exit", releaseCompanionLock);
 
   socket.on("message", (message) => {
     const event = parseEvent(message);
@@ -1323,6 +1603,12 @@ async function runServer() {
       console.log(`[event] ${JSON.stringify(event)}`);
     }
     state.applyEvent(event);
+  });
+
+  socket.on("error", async (error) => {
+    console.error(`[udp] ${error.message}`);
+    await close();
+    process.exit(1);
   });
 
   socket.bind(UDP_PORT, "127.0.0.1", () => {

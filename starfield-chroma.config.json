@@ -10,7 +10,9 @@
   "logHeartbeats": false,
   "accentDevices": true,
   "starfieldDir": "",
-  "artifactFormIds": [],
+  "artifactFormIds": [
+    "0x216F87"
+  ],
   "damageThresholds": {
     "chip": 1,
     "heavy": 25,

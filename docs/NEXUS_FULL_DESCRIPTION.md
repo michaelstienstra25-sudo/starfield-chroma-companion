@@ -9,11 +9,11 @@ Starfield Chroma Companion adds reactive Razer Chroma lighting to Starfield on P
 
 It makes supported Razer Chroma devices react to in-game moments such as scanner anomalies, combat, weapon fire, reloads, damage, O2/gas/radiation warnings, grav jumps, level-up/power moments, menus, saves, loads, and ship moments.
 
-The alpha includes a Starfield-styled desktop launcher with one START STARFIELD button, status display, Settings, a Razer Chroma shortcut, and an Advanced Panel for Chroma SDK checks and test effects.
+The alpha includes a Starfield-styled desktop launcher with one START STARFIELD button, status display, Settings, a Razer Chroma shortcut, and an Advanced Panel for Chroma SDK checks, effect previews, and multi-device focus tests.
 
 The setup assistant can auto-detect Starfield, install the companion app, install the SFSE plugin DLLs, save the Starfield folder in the config, and create optional Desktop/Start Menu shortcuts.
 
-Keyboard effects are the most complete path right now. Mouse, mousepad, headset, and chromalink accent support now reacts to broad game states such as damage, combat, scanner, ship, menu, and idle, but I am still looking for more hardware reports, especially for Naga-class mice and Razer headsets.
+Multi-device Chroma support is now active for keyboard, mouse, mousepad, headset, and chromalink devices. Mouse devices use custom action accents for combat, damage, scanner anomalies, grav/power moments, O2/gas warnings, rewards, menus, and idle state. Headset, mousepad, and chromalink devices receive stronger state-aware pulses. Hardware behavior can still vary by device model, so I am still looking for reports from Naga-class mice, Razer headsets, mousepads, and Chroma Link setups.
 
 Required software:
 
@@ -28,7 +28,7 @@ Installation instructions
 
 Recommended setup assistant:
 
-1. Download StarfieldChromaCompanionSetup-v0.1.3-alpha.exe.
+1. Download StarfieldChromaCompanionSetup-v0.1.4-alpha.exe.
 2. Run it.
 3. Let it detect Starfield, or browse to the folder that contains sfse_loader.exe.
 4. Choose whether you want Desktop and Start Menu shortcuts.

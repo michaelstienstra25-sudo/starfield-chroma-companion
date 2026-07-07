@@ -1,6 +1,8 @@
 # Changelog
 
-## Unreleased
+## v0.1.4-alpha
+
+Multi-device Chroma support and setup polish.
 
 - Added a Razer Chroma Apps setup panel to the control panel.
 - Added an `Open Razer Chroma` action so users can quickly enable the required global Chroma Apps toggle.
@@ -17,9 +19,12 @@
 - Added a single-file setup assistant that auto-detects Starfield installs, installs SFSE plugin DLLs, installs the companion app to LocalAppData, writes the Starfield folder to config, and creates Desktop/Start Menu shortcuts.
 - Added safer setup drive detection for missing or disconnected Steam library drives.
 - Updated MO2 documentation with the extra unlock step after starting the companion.
-- Documented that keyboard effects are currently the primary supported path while mouse/Naga-class device support needs broader testing.
 - Started a balanced feedback pass based on early tester input: calmer idle lighting, WASD-focused breathing, radar-style scanner sweeps, and more deliberate combat/damage feedback.
-- Expanded accent device behavior so mouse, mousepad, headset, and chromalink receive stronger state-specific colors for damage, combat, scanner, ship, menu, and idle states.
+- Added true multi-device Chroma accent support for mouse, mousepad, headset, and chromalink devices.
+- Added custom 9x7 mouse matrix effects for damage, combat, scanner anomalies, grav/power moments, oxygen warnings, rewards, menus, and idle state.
+- Strengthened headset, mousepad, and chromalink pulses while keeping headset output broad-compatible for devices that only support static effects.
+- Added Advanced Panel device focus tests for all-device, combat-device, and exploration-device previews.
+- Improved artifact/power pickup detection using the captured artifact form ID.
 
 ## v0.1.2-alpha
 

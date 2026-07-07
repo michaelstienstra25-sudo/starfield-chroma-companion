@@ -42,6 +42,12 @@ const TEST_EVENTS = {
   clear: "effects.clear",
 };
 
+const TEST_SEQUENCES = {
+  deviceFocus: ["heavyDamage", "oxygen", "scannerAnomaly", "grav", "power"],
+  combatFocus: ["damage", "heavyDamage", "damage", "heavyDamage"],
+  explorationFocus: ["scanner", "scannerAnomaly", "power", "clear"],
+};
+
 function readJson(filePath, fallback) {
   try {
     if (!fs.existsSync(filePath)) return fallback;
@@ -208,6 +214,18 @@ function sendUdpEvent(type) {
   });
 }
 
+async function sendUdpSequence(type) {
+  const sequence = TEST_SEQUENCES[type];
+  if (!sequence) throw new Error(`Unknown test sequence: ${type}`);
+  const sent = [];
+  for (const eventType of sequence) {
+    const result = await sendUdpEvent(eventType);
+    sent.push(result.event);
+    await wait(2200);
+  }
+  return { sent: true, sequence: type, events: sent };
+}
+
 async function wait(ms) {
   await new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -225,6 +243,14 @@ async function fetchWithRetry(url, options, attempts = 6) {
     }
   }
   throw lastError;
+}
+
+async function putChromaWithRetry(url, body, attempts = 12) {
+  return fetchWithRetry(url, {
+    method: "PUT",
+    headers: body ? { "Content-Type": "application/json" } : undefined,
+    body: body ? JSON.stringify(body) : undefined,
+  }, attempts);
 }
 
 async function testChromaSdk() {
@@ -245,11 +271,13 @@ async function testChromaSdk() {
   const json = await response.json();
   if (!json.uri) throw new Error(`Chroma SDK did not return a session uri: ${JSON.stringify(json)}`);
 
-  await fetchWithRetry(`${json.uri}/keyboard`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ effect: "CHROMA_STATIC", param: { color: 0x00d7ff } }),
-  });
+  const frame = Array.from({ length: 6 }, () => Array.from({ length: 22 }, () => 0xffd700));
+  await putChromaWithRetry(`${json.uri}/heartbeat`);
+  const end = Date.now() + 2500;
+  while (Date.now() < end) {
+    await putChromaWithRetry(`${json.uri}/keyboard`, { effect: "CHROMA_CUSTOM", param: frame }, 6);
+    await wait(250);
+  }
   await fetchWithRetry(json.uri, { method: "DELETE" }, 2).catch(() => {});
   return {
     ok: true,
@@ -336,6 +364,11 @@ async function route(request, response) {
     if (request.method === "POST" && request.url === "/api/test-event") {
       const body = await readRequestBody(request);
       respondJson(response, 200, await sendUdpEvent(body.type ?? "damage"));
+      return;
+    }
+    if (request.method === "POST" && request.url === "/api/test-sequence") {
+      const body = await readRequestBody(request);
+      respondJson(response, 200, await sendUdpSequence(body.type ?? "deviceFocus"));
       return;
     }
     respondJson(response, 404, { error: "Not found" });
@@ -436,6 +469,17 @@ button{border:0;border-radius:7px;padding:11px 14px;background:var(--cyan);color
   </div>
 
   <section class="panel">
+    <h2>Device Focus Tests</h2>
+    <p class="help">Use these when checking whether mouse, mousepad, headset, and Chroma Link devices are reacting clearly enough. Keep Chroma Apps enabled in Razer Chroma while testing.</p>
+    <div class="effect-list">
+      <div class="effect"><button class="warn" onclick="sequenceTest('deviceFocus')">All Devices</button><strong>Full device pass</strong><span>Runs damage, environment, anomaly, grav, and power moments with stronger extra-device accents.</span></div>
+      <div class="effect"><button class="secondary" onclick="sequenceTest('combatFocus')">Combat Devices</button><strong>Mouse and headset impact</strong><span>Repeats hit pulses so you can judge mouse/headset visibility during action.</span></div>
+      <div class="effect"><button class="secondary" onclick="sequenceTest('explorationFocus')">Explore Devices</button><strong>Scanner and power flow</strong><span>Previews calmer exploration, scanner anomaly, and power effects.</span></div>
+      <div class="effect"><button class="danger" onclick="eventTest('clear')">Clear</button><strong>Stop preview</strong><span>Returns lighting to the base state after testing.</span></div>
+    </div>
+  </section>
+
+  <section class="panel">
     <h2>Configuration</h2>
     <div class="row">
       <div><label>Brightness</label><input id="brightness" type="number" min="0.1" max="1" step="0.05"><p class="help">Overall RGB strength. Lower it if the keyboard is too bright.</p></div>
@@ -509,6 +553,9 @@ async function post(url, body = {}) {
 function eventTest(type) {
   post('/api/test-event', { type });
 }
+function sequenceTest(type) {
+  post('/api/test-sequence', { type });
+}
 function numberValue(id) {
   return Number(document.getElementById(id).value);
 }
@@ -544,6 +591,14 @@ if (process.argv.includes("--status-once")) {
 } else {
   const server = http.createServer((request, response) => {
     route(request, response);
+  });
+  server.on("error", (error) => {
+    if (error.code === "EADDRINUSE") {
+      console.log(`Starfield Chroma Control Panel already running on http://127.0.0.1:${PORT}/`);
+      process.exit(0);
+    }
+    console.error(error);
+    process.exit(1);
   });
   server.listen(PORT, "127.0.0.1", () => {
     const url = `http://127.0.0.1:${PORT}/`;
