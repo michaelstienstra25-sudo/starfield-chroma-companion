@@ -39,6 +39,7 @@ Get-ChildItem -LiteralPath $payload -Recurse -File -Include *.log,*.err.log | Re
 
 foreach ($file in @(
   "StarfieldChromaCompanion.exe",
+  "mo2-start.mjs",
   "start-tray.cmd",
   "README.md",
   "CHANGELOG.md",

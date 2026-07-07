@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Added `mo2-start.mjs`, a Mod Organizer 2 helper that opens the control panel from the real mod folder without keeping MO2 unnecessarily locked.
+- Added a dedicated MO2 setup guide and clarified that MO2 users should start the Chroma companion from the panel but launch Starfield/SFSE from MO2.
+
 ## v0.1.4-alpha
 
 Multi-device Chroma support and setup polish.

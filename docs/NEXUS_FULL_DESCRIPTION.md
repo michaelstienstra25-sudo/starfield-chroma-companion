@@ -60,10 +60,12 @@ Suggested MO2 setup:
 3. Add a second MO2 executable:
    - Binary: node.exe
    - Start in: the mod's StarfieldChromaCompanion folder inside MO2's mods directory
-   - Arguments: .\launcher\starfield-chroma-launcher.mjs
-4. Start the control panel and start the companion.
-5. If MO2 locks while the companion is running, unlock MO2.
+   - Arguments: .\mo2-start.mjs
+4. Run the companion entry from MO2.
+5. In the control panel, click Start Companion.
 6. Launch Starfield through SFSE from MO2.
+
+Do not use the control panel's Start SFSE button for an MO2-managed playthrough. That button launches sfse_loader.exe directly and will not use MO2's virtual file system.
 
 Manual:
 
