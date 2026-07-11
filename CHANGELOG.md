@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Added automatic full app shutdown after a Starfield session ends: when Starfield closes, the desktop app now stops the companion and launcher server and exits itself.
+
 ## v0.1.5-alpha
 
 - Added `mo2-start.mjs`, a Mod Organizer 2 helper that opens the control panel from the real mod folder without keeping MO2 unnecessarily locked.

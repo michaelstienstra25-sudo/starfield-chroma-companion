@@ -99,6 +99,23 @@ function Get-Status {
   }
 }
 
+function Stop-AppCompletely([bool]$Silent = $false) {
+  if ($script:AppExiting) { return }
+  $script:AppExiting = $true
+  try {
+    $timer.Stop()
+  } catch {
+  }
+  try {
+    Invoke-Api "/api/shutdown" "Post" @{} | Out-Null
+  } catch {
+    if (-not $Silent) { Show-Error $_.Exception.Message }
+  } finally {
+    $notify.Visible = $false
+    [System.Windows.Forms.Application]::Exit()
+  }
+}
+
 function Show-Error([string]$Message) {
   [System.Windows.Forms.MessageBox]::Show($Message, "Starfield Chroma Companion", "OK", "Error") | Out-Null
 }
@@ -481,6 +498,9 @@ $menu.Items.Add("-") | Out-Null
 $exitItem = $menu.Items.Add("Exit")
 $notify.ContextMenuStrip = $menu
 
+$script:StarfieldSessionSeen = $false
+$script:AppExiting = $false
+
 function Update-StatusUi {
   $status = Get-Status
   if ($null -eq $status) {
@@ -504,6 +524,12 @@ function Update-StatusUi {
   $tip = "Companion: " + $(if ($status.companionRunning) { "running" } else { "stopped" }) + " | Starfield: " + $(if ($status.starfieldRunning) { "running" } else { "stopped" })
   if ($tip.Length -gt 63) { $tip = $tip.Substring(0, 63) }
   $notify.Text = $tip
+
+  if ($status.starfieldRunning) {
+    $script:StarfieldSessionSeen = $true
+  } elseif ($script:StarfieldSessionSeen -and -not $script:AppExiting) {
+    Stop-AppCompletely $true
+  }
 }
 
 $startButton.add_Click({
@@ -511,6 +537,7 @@ $startButton.add_Click({
     $startButton.Enabled = $false
     $startButton.Text = "Starting..."
     Invoke-Api "/api/start-all" "Post" @{} | Out-Null
+    $script:StarfieldSessionSeen = $true
   } catch {
     Show-Error $_.Exception.Message
   } finally {
@@ -523,14 +550,14 @@ $startButton.add_Click({
 $settingsButton.add_Click({ Show-SettingsWindow; Update-StatusUi })
 $openRazerButton.add_Click({ try { Invoke-Api "/api/open-razer-chroma" "Post" @{} | Out-Null } catch { Show-Error $_.Exception.Message } })
 $advancedButton.add_Click({ Start-Launcher; Start-Process "$url/" })
-$exitButton.add_Click({ $notify.Visible = $false; [System.Windows.Forms.Application]::Exit() })
+$exitButton.add_Click({ Stop-AppCompletely $false })
 
 $showItem.add_Click({ $mainForm.Show(); $mainForm.WindowState = "Normal"; $mainForm.Activate() })
 $startItem.add_Click({ $startButton.PerformClick() })
 $settingsItem.add_Click({ Show-SettingsWindow; Update-StatusUi })
 $openRazerItem.add_Click({ try { Invoke-Api "/api/open-razer-chroma" "Post" @{} | Out-Null } catch { Show-Error $_.Exception.Message } })
 $advancedItem.add_Click({ Start-Launcher; Start-Process "$url/" })
-$exitItem.add_Click({ $notify.Visible = $false; [System.Windows.Forms.Application]::Exit() })
+$exitItem.add_Click({ Stop-AppCompletely $false })
 $notify.add_DoubleClick({ $mainForm.Show(); $mainForm.WindowState = "Normal"; $mainForm.Activate() })
 
 $mainForm.add_FormClosing({

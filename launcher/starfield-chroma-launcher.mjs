@@ -180,6 +180,12 @@ async function stopCompanion() {
   return { stopped: result.ok, message: result.ok ? "Companion stopped." : result.stderr };
 }
 
+async function shutdownLauncher() {
+  const companion = await stopCompanion();
+  setTimeout(() => process.exit(0), 250);
+  return { shutdown: true, companion };
+}
+
 async function startStarfield() {
   const config = loadConfig();
   const starfieldDir = findStarfieldDir(config);
@@ -358,6 +364,10 @@ async function route(request, response) {
     }
     if (request.method === "POST" && request.url === "/api/stop-companion") {
       respondJson(response, 200, await stopCompanion());
+      return;
+    }
+    if (request.method === "POST" && request.url === "/api/shutdown") {
+      respondJson(response, 200, await shutdownLauncher());
       return;
     }
     if (request.method === "POST" && request.url === "/api/start-starfield") {
