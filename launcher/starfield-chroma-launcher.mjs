@@ -43,6 +43,7 @@ const TEST_EVENTS = {
   oxygen: "oxygen.danger",
   scanner: "scanner.preview",
   scannerAnomaly: "scanner.anomaly.preview",
+  takeoff: "takeoff.preview",
   grav: "grav.preview",
   level: "player.levelUp",
   power: "power.preview",
@@ -50,7 +51,7 @@ const TEST_EVENTS = {
 };
 
 const TEST_SEQUENCES = {
-  deviceFocus: ["heavyDamage", "oxygen", "scannerAnomaly", "grav", "power"],
+  deviceFocus: ["heavyDamage", "oxygen", "scannerAnomaly", "takeoff", "grav", "power"],
   combatFocus: ["damage", "heavyDamage", "damage", "heavyDamage"],
   explorationFocus: ["scanner", "scannerAnomaly", "power", "clear"],
 };
@@ -475,6 +476,7 @@ button{border:0;border-radius:7px;padding:11px 14px;background:var(--cyan);color
         <div class="effect"><button class="secondary" onclick="eventTest('oxygen')">O2/Gas</button><strong>Environment danger</strong><span>Oxygen, gas, or radiation style warning.</span></div>
         <div class="effect"><button class="secondary" onclick="eventTest('scanner')">Scanner</button><strong>Scanner sweep</strong><span>Short preview of scanner lighting.</span></div>
         <div class="effect"><button class="secondary" onclick="eventTest('scannerAnomaly')">Anomaly</button><strong>Artifact nearby</strong><span>Scanner anomaly pulse preview.</span></div>
+        <div class="effect"><button class="secondary" onclick="eventTest('takeoff')">Takeoff</button><strong>Planet launch</strong><span>Engine ignition and launch sweep for leaving a planet.</span></div>
         <div class="effect"><button class="secondary" onclick="eventTest('grav')">Grav</button><strong>Grav jump</strong><span>Charge and jump preview.</span></div>
         <div class="effect"><button class="secondary" onclick="eventTest('level')">Level Up</button><strong>Progress reward</strong><span>Celebration effect for level-up moments.</span></div>
         <div class="effect"><button class="secondary" onclick="eventTest('power')">Power</button><strong>Starborn power</strong><span>Power-use/temple style burst.</span></div>

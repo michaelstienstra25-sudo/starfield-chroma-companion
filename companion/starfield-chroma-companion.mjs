@@ -281,6 +281,10 @@ class LightingState {
     this.gravJumpArmedUntil = 0;
     this.gravChargeUntil = 0;
     this.gravChargeLevel = 0;
+    this.lastLoadingMenuAt = 0;
+    this.lastFaderMenuAt = 0;
+    this.recentTravelMenuUntil = 0;
+    this.takeoffCooldownUntil = 0;
     this.movementPulseUntil = 0;
     this.templeCinematicUntil = 0;
     this.lastCombatAt = 0;
@@ -317,6 +321,10 @@ class LightingState {
     this.gravJumpArmedUntil = 0;
     this.gravChargeUntil = 0;
     this.gravChargeLevel = 0;
+    this.lastLoadingMenuAt = 0;
+    this.lastFaderMenuAt = 0;
+    this.recentTravelMenuUntil = 0;
+    this.takeoffCooldownUntil = 0;
     this.movementPulseUntil = 0;
     this.templeCinematicUntil = 0;
     this.lastCombatAt = 0;
@@ -328,8 +336,18 @@ class LightingState {
     this.movementPulseUntil = Date.now() + ms;
   }
 
+  activateTakeoff(reason = "takeoff") {
+    const now = Date.now();
+    if (now < this.takeoffCooldownUntil) return;
+    this.mode = "ship";
+    this.takeoffCooldownUntil = now + 16000;
+    this.push("takeoff", 96);
+    if (CONFIG.logEvents) console.log(`[infer] takeoff reason=${reason}`);
+  }
+
   handleMenuEvent(event) {
     const menu = String(event.menu ?? "");
+    const lowerMenu = menu.toLowerCase();
     const opening = event.type !== "ui.menu.close" && event.opening !== false;
     const now = Date.now();
 
@@ -354,17 +372,34 @@ class LightingState {
       return;
     }
 
+    if (lowerMenu.includes("takeoff") || lowerMenu.includes("launch")) {
+      this.activateTakeoff(`menu:${menu}`);
+      return;
+    }
+
     switch (menu) {
       case "HUDMenu":
       case "HUDMessagesMenu":
       case "CursorMenu":
+        return;
       case "FaderMenu":
+        this.lastFaderMenuAt = now;
         return;
       case "LoadingMenu":
+        this.lastLoadingMenuAt = now;
         if (now < this.gravJumpArmedUntil) {
           this.mode = "ship";
           this.gravChargeLevel = 0;
           this.push("gravWarp", 96);
+          return;
+        }
+        if (now < this.recentTravelMenuUntil) {
+          this.mode = "boot";
+          this.push("load", 28);
+          return;
+        }
+        if (this.mode === "explore" || this.mode === "boot") {
+          this.activateTakeoff("loading-transition");
           return;
         }
         this.mode = "boot";
@@ -383,6 +418,7 @@ class LightingState {
       case "PauseMenu":
       case "DataMenu":
         this.mode = "menu";
+        this.recentTravelMenuUntil = now + 10000;
         this.push("menu", 42);
         return;
       case "BSMissionMenu":
@@ -391,13 +427,13 @@ class LightingState {
         return;
       case "GalaxyStarMapMenu":
         this.mode = "ship";
+        this.recentTravelMenuUntil = now + 20000;
         this.gravJumpArmedUntil = now + 22000;
         this.activateGravCharge(0.34);
         this.push("gravCharge", 74);
         return;
       case "TakeoffMenu":
-        this.mode = "ship";
-        this.push("takeoff", 72);
+        this.activateTakeoff("TakeoffMenu");
         return;
       case "SkillsMenu":
         this.mode = "menu";
@@ -417,6 +453,7 @@ class LightingState {
         return;
       case "SpaceshipEditorMenu":
         this.mode = "ship";
+        this.recentTravelMenuUntil = now + 12000;
         this.push("shipCombat", 34);
         return;
       case "PhotoModeMenu":
@@ -572,6 +609,12 @@ class LightingState {
       case "effects.clear":
         this.clearSustainedEffects();
         break;
+      case "takeoff.preview":
+      case "ship.takeoff":
+      case "ship.launch":
+      case "ship.liftoff":
+        this.activateTakeoff(event.type);
+        break;
       case "grav.preview":
         this.mode = "ship";
         this.gravJumpArmedUntil = Date.now() + 8000;
@@ -715,8 +758,12 @@ class LightingState {
         this.push("menu", 40);
         break;
       case "player.ship":
-        this.mode = "ship";
-        this.push("grav", 34);
+        if (Date.now() - this.lastLoadingMenuAt < 16000) {
+          this.activateTakeoff("player.ship-after-load");
+        } else {
+          this.mode = "ship";
+          this.push("grav", 34);
+        }
         break;
       case "player.explore":
       case "sfse.heartbeat":
