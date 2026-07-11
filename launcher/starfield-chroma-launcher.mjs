@@ -11,6 +11,7 @@ const ROOT_DIR = path.resolve(SCRIPT_DIR, "..");
 const CONFIG_PATH = path.join(ROOT_DIR, "starfield-chroma.config.json");
 const COMPANION_SCRIPT = path.join(ROOT_DIR, "companion", "starfield-chroma-companion.mjs");
 const PORT = Number(process.env.STARFIELD_CHROMA_LAUNCHER_PORT ?? 47322);
+const STARFIELD_MONITOR_MS = 3000;
 
 const DEFAULT_CONFIG = {
   chromaRoot: "http://localhost:54235/razer/chromasdk",
@@ -36,6 +37,9 @@ const DEFAULT_CONFIG = {
     critical: 150,
   },
 };
+
+let starfieldMonitor = null;
+let starfieldObservedRunning = false;
 
 const TEST_EVENTS = {
   damage: "player.damage",
@@ -181,9 +185,32 @@ async function stopCompanion() {
 }
 
 async function shutdownLauncher() {
+  if (starfieldMonitor) {
+    clearInterval(starfieldMonitor);
+    starfieldMonitor = null;
+  }
   const companion = await stopCompanion();
   setTimeout(() => process.exit(0), 250);
   return { shutdown: true, companion };
+}
+
+function armStarfieldAutoShutdown() {
+  if (starfieldMonitor) return;
+  starfieldMonitor = setInterval(async () => {
+    try {
+      const running = await isProcessRunning("Starfield");
+      if (running) {
+        starfieldObservedRunning = true;
+        return;
+      }
+      if (starfieldObservedRunning) {
+        await shutdownLauncher();
+      }
+    } catch {
+      // Keep the launcher alive if a transient process query fails.
+    }
+  }, STARFIELD_MONITOR_MS);
+  starfieldMonitor.unref?.();
 }
 
 async function startStarfield() {
@@ -199,6 +226,7 @@ async function startStarfield() {
     stdio: "ignore",
     windowsHide: false,
   }).unref();
+  armStarfieldAutoShutdown();
   return { started: true, starfieldDir };
 }
 
@@ -310,11 +338,16 @@ async function testChromaSdk() {
 async function status() {
   const config = loadConfig();
   const starfieldDir = findStarfieldDir(config);
+  const starfieldRunning = await isProcessRunning("Starfield");
+  if (starfieldRunning) {
+    starfieldObservedRunning = true;
+    armStarfieldAutoShutdown();
+  }
   return {
     rootDir: ROOT_DIR,
     config,
     companionRunning: await companionRunning(),
-    starfieldRunning: await isProcessRunning("Starfield"),
+    starfieldRunning,
     sfseLoaderFound: Boolean(starfieldDir),
     starfieldDir,
     node: process.execPath,
