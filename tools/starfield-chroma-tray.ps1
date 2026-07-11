@@ -163,7 +163,7 @@ function Show-SettingsWindow {
   $config = $status.config
   $settings = New-Object System.Windows.Forms.Form
   $settings.Text = "Starfield Chroma Companion - Settings"
-  $settings.Size = New-Object System.Drawing.Size(640, 690)
+  $settings.Size = New-Object System.Drawing.Size(720, 820)
   $settings.StartPosition = "CenterParent"
   $settings.FormBorderStyle = "FixedDialog"
   $settings.MaximizeBox = $false
@@ -178,17 +178,30 @@ function Show-SettingsWindow {
   $settings.Controls.Add($title)
 
   $settings.Controls.Add((New-Label "Starfield folder" 24 72 520 20))
-  $settings.Controls.Add((New-HelpLabel "The Starfield install folder that contains sfse_loader.exe. Used by the one-click START STARFIELD button." 24 92 560 34))
+  $settings.Controls.Add((New-HelpLabel "The Starfield install folder that contains sfse_loader.exe. Used by the one-click START STARFIELD button." 24 92 640 34))
   $starfieldDir = New-Object System.Windows.Forms.TextBox
   $starfieldDir.Location = New-Object System.Drawing.Point(24, 126)
-  $starfieldDir.Size = New-Object System.Drawing.Size(560, 28)
+  $starfieldDir.Size = New-Object System.Drawing.Size(640, 28)
   $starfieldDir.Text = if ($config.starfieldDir) { $config.starfieldDir } else { $status.starfieldDir }
   $settings.Controls.Add($starfieldDir)
 
-  $settings.Controls.Add((New-Label "Brightness" 24 176 160 20))
-  $settings.Controls.Add((New-HelpLabel "Overall RGB strength. Lower this if effects are too bright in a dark room." 24 200 170 44))
+  $settings.Controls.Add((New-Label "Effect preset" 24 176 220 20))
+  $settings.Controls.Add((New-HelpLabel "Overall behavior style. Immersive is the balanced default; Combat Heavy makes action and extra devices more obvious." 24 200 640 34))
+  $preset = New-Object System.Windows.Forms.ComboBox
+  $preset.Location = New-Object System.Drawing.Point(24, 236)
+  $preset.Size = New-Object System.Drawing.Size(260, 28)
+  $preset.DropDownStyle = "DropDownList"
+  [void]$preset.Items.Add("immersive")
+  [void]$preset.Items.Add("subtle")
+  [void]$preset.Items.Add("combatHeavy")
+  [void]$preset.Items.Add("readable")
+  $preset.SelectedItem = if ($config.effectPreset) { [string]$config.effectPreset } else { "immersive" }
+  $settings.Controls.Add($preset)
+
+  $settings.Controls.Add((New-Label "Brightness" 24 286 160 20))
+  $settings.Controls.Add((New-HelpLabel "Overall RGB strength. Lower this if effects are too bright in a dark room." 24 310 170 44))
   $brightness = New-Object System.Windows.Forms.NumericUpDown
-  $brightness.Location = New-Object System.Drawing.Point(24, 244)
+  $brightness.Location = New-Object System.Drawing.Point(24, 354)
   $brightness.Size = New-Object System.Drawing.Size(140, 28)
   $brightness.DecimalPlaces = 2
   $brightness.Increment = 0.05
@@ -197,10 +210,10 @@ function Show-SettingsWindow {
   $brightness.Value = [decimal]$config.brightness
   $settings.Controls.Add($brightness)
 
-  $settings.Controls.Add((New-Label "Pulse boost" 224 176 160 20))
-  $settings.Controls.Add((New-HelpLabel "How strongly hit, heal, level-up, and power pulses jump above the base lighting." 224 200 170 44))
+  $settings.Controls.Add((New-Label "Pulse boost" 224 286 160 20))
+  $settings.Controls.Add((New-HelpLabel "How strongly hit, heal, level-up, and power pulses jump above the base lighting." 224 310 170 44))
   $pulseBoost = New-Object System.Windows.Forms.NumericUpDown
-  $pulseBoost.Location = New-Object System.Drawing.Point(224, 244)
+  $pulseBoost.Location = New-Object System.Drawing.Point(224, 354)
   $pulseBoost.Size = New-Object System.Drawing.Size(140, 28)
   $pulseBoost.DecimalPlaces = 2
   $pulseBoost.Increment = 0.05
@@ -209,10 +222,10 @@ function Show-SettingsWindow {
   $pulseBoost.Value = [decimal]$config.pulseBoost
   $settings.Controls.Add($pulseBoost)
 
-  $settings.Controls.Add((New-Label "Frame ms" 424 176 160 20))
-  $settings.Controls.Add((New-HelpLabel "Animation update speed. Lower is smoother, higher is lighter on the system." 424 200 170 44))
+  $settings.Controls.Add((New-Label "Frame ms" 424 286 160 20))
+  $settings.Controls.Add((New-HelpLabel "Animation update speed. Lower is smoother, higher is lighter on the system." 424 310 170 44))
   $frameMs = New-Object System.Windows.Forms.NumericUpDown
-  $frameMs.Location = New-Object System.Drawing.Point(424, 244)
+  $frameMs.Location = New-Object System.Drawing.Point(424, 354)
   $frameMs.Size = New-Object System.Drawing.Size(140, 28)
   $frameMs.Minimum = 40
   $frameMs.Maximum = 250
@@ -220,30 +233,30 @@ function Show-SettingsWindow {
   $frameMs.Value = [decimal]$config.frameMs
   $settings.Controls.Add($frameMs)
 
-  $settings.Controls.Add((New-Label "Chip damage" 24 304 160 20))
-  $settings.Controls.Add((New-HelpLabel "Minimum damage that creates a small feedback pulse." 24 328 170 34))
+  $settings.Controls.Add((New-Label "Chip damage" 24 414 160 20))
+  $settings.Controls.Add((New-HelpLabel "Minimum damage that creates a small feedback pulse." 24 438 170 34))
   $damageChip = New-Object System.Windows.Forms.NumericUpDown
-  $damageChip.Location = New-Object System.Drawing.Point(24, 366)
+  $damageChip.Location = New-Object System.Drawing.Point(24, 476)
   $damageChip.Size = New-Object System.Drawing.Size(140, 28)
   $damageChip.Minimum = 0
   $damageChip.Maximum = 9999
   $damageChip.Value = [decimal]$config.damageThresholds.chip
   $settings.Controls.Add($damageChip)
 
-  $settings.Controls.Add((New-Label "Heavy damage" 224 304 160 20))
-  $settings.Controls.Add((New-HelpLabel "Damage value where the stronger full-keyboard hit warning starts." 224 328 170 34))
+  $settings.Controls.Add((New-Label "Heavy damage" 224 414 160 20))
+  $settings.Controls.Add((New-HelpLabel "Damage value where the stronger full-keyboard hit warning starts." 224 438 170 34))
   $damageHeavy = New-Object System.Windows.Forms.NumericUpDown
-  $damageHeavy.Location = New-Object System.Drawing.Point(224, 366)
+  $damageHeavy.Location = New-Object System.Drawing.Point(224, 476)
   $damageHeavy.Size = New-Object System.Drawing.Size(140, 28)
   $damageHeavy.Minimum = 0
   $damageHeavy.Maximum = 9999
   $damageHeavy.Value = [decimal]$config.damageThresholds.heavy
   $settings.Controls.Add($damageHeavy)
 
-  $settings.Controls.Add((New-Label "Critical damage" 424 304 160 20))
-  $settings.Controls.Add((New-HelpLabel "Damage value for the most urgent critical warning effect." 424 328 170 34))
+  $settings.Controls.Add((New-Label "Critical damage" 424 414 160 20))
+  $settings.Controls.Add((New-HelpLabel "Damage value for the most urgent critical warning effect." 424 438 170 34))
   $damageCritical = New-Object System.Windows.Forms.NumericUpDown
-  $damageCritical.Location = New-Object System.Drawing.Point(424, 366)
+  $damageCritical.Location = New-Object System.Drawing.Point(424, 476)
   $damageCritical.Size = New-Object System.Drawing.Size(140, 28)
   $damageCritical.Minimum = 0
   $damageCritical.Maximum = 9999
@@ -252,29 +265,70 @@ function Show-SettingsWindow {
 
   $accentDevices = New-Object System.Windows.Forms.CheckBox
   $accentDevices.Text = "Accent devices enabled"
-  $accentDevices.Location = New-Object System.Drawing.Point(24, 424)
+  $accentDevices.Location = New-Object System.Drawing.Point(24, 534)
   $accentDevices.Size = New-Object System.Drawing.Size(240, 26)
   $accentDevices.Checked = [bool]$config.accentDevices
   $accentDevices.ForeColor = [System.Drawing.Color]::Gainsboro
   $accentDevices.BackColor = [System.Drawing.Color]::Transparent
   $settings.Controls.Add($accentDevices)
-  $settings.Controls.Add((New-HelpLabel "Also sends simplified mood colors to other Chroma devices such as mouse, mousepad, or headset." 48 450 520 34))
+  $settings.Controls.Add((New-HelpLabel "Also sends simplified mood colors to other Chroma devices such as mouse, mousepad, headset, and Chroma Link." 48 560 600 34))
+
+  $settings.Controls.Add((New-Label "Mouse" 24 606 90 20))
+  $settings.Controls.Add((New-Label "Mousepad" 174 606 110 20))
+  $settings.Controls.Add((New-Label "Headset" 324 606 110 20))
+  $settings.Controls.Add((New-Label "Chroma Link" 474 606 130 20))
+  $mouseIntensity = New-Object System.Windows.Forms.NumericUpDown
+  $mouseIntensity.Location = New-Object System.Drawing.Point(24, 630)
+  $mouseIntensity.Size = New-Object System.Drawing.Size(110, 28)
+  $mouseIntensity.DecimalPlaces = 2
+  $mouseIntensity.Increment = 0.05
+  $mouseIntensity.Minimum = 0.25
+  $mouseIntensity.Maximum = 2.00
+  $mouseIntensity.Value = [decimal]$config.deviceIntensity.mouse
+  $mousepadIntensity = New-Object System.Windows.Forms.NumericUpDown
+  $mousepadIntensity.Location = New-Object System.Drawing.Point(174, 630)
+  $mousepadIntensity.Size = New-Object System.Drawing.Size(110, 28)
+  $mousepadIntensity.DecimalPlaces = 2
+  $mousepadIntensity.Increment = 0.05
+  $mousepadIntensity.Minimum = 0.25
+  $mousepadIntensity.Maximum = 2.00
+  $mousepadIntensity.Value = [decimal]$config.deviceIntensity.mousepad
+  $headsetIntensity = New-Object System.Windows.Forms.NumericUpDown
+  $headsetIntensity.Location = New-Object System.Drawing.Point(324, 630)
+  $headsetIntensity.Size = New-Object System.Drawing.Size(110, 28)
+  $headsetIntensity.DecimalPlaces = 2
+  $headsetIntensity.Increment = 0.05
+  $headsetIntensity.Minimum = 0.25
+  $headsetIntensity.Maximum = 2.00
+  $headsetIntensity.Value = [decimal]$config.deviceIntensity.headset
+  $chromalinkIntensity = New-Object System.Windows.Forms.NumericUpDown
+  $chromalinkIntensity.Location = New-Object System.Drawing.Point(474, 630)
+  $chromalinkIntensity.Size = New-Object System.Drawing.Size(110, 28)
+  $chromalinkIntensity.DecimalPlaces = 2
+  $chromalinkIntensity.Increment = 0.05
+  $chromalinkIntensity.Minimum = 0.25
+  $chromalinkIntensity.Maximum = 2.00
+  $chromalinkIntensity.Value = [decimal]$config.deviceIntensity.chromalink
+  $settings.Controls.Add($mouseIntensity)
+  $settings.Controls.Add($mousepadIntensity)
+  $settings.Controls.Add($headsetIntensity)
+  $settings.Controls.Add($chromalinkIntensity)
 
   $logEvents = New-Object System.Windows.Forms.CheckBox
   $logEvents.Text = "Log events for debugging"
-  $logEvents.Location = New-Object System.Drawing.Point(24, 496)
+  $logEvents.Location = New-Object System.Drawing.Point(24, 676)
   $logEvents.Size = New-Object System.Drawing.Size(240, 26)
   $logEvents.Checked = [bool]$config.logEvents
   $logEvents.ForeColor = [System.Drawing.Color]::Gainsboro
   $logEvents.BackColor = [System.Drawing.Color]::Transparent
   $settings.Controls.Add($logEvents)
-  $settings.Controls.Add((New-HelpLabel "Writes extra event details to the log. Useful for testing new effects, but normally leave it off." 48 522 520 34))
+  $settings.Controls.Add((New-HelpLabel "Writes extra event details to the log. Useful for testing new effects, but normally leave it off." 48 702 600 34))
 
-  $hint = New-Label "Restart the companion after changing render settings so the running effect engine reloads the config." 24 574 560 34 9 ([System.Drawing.Color]::FromArgb(242, 180, 61))
+  $hint = New-Label "Restart the companion after changing render settings so the running effect engine reloads the config." 24 734 640 24 9 ([System.Drawing.Color]::FromArgb(242, 180, 61))
   $settings.Controls.Add($hint)
 
-  $save = New-Button "Save Settings" 344 612 140 36
-  $cancel = New-Button "Cancel" 494 612 100 36
+  $save = New-Button "Save Settings" 424 762 140 36
+  $cancel = New-Button "Cancel" 574 762 100 36
   $cancel.BackColor = [System.Drawing.Color]::FromArgb(43, 49, 68)
   $cancel.ForeColor = [System.Drawing.Color]::White
   $settings.Controls.Add($save)
@@ -285,11 +339,18 @@ function Show-SettingsWindow {
     try {
       $body = @{
         starfieldDir = $starfieldDir.Text.Trim()
+        effectPreset = [string]$preset.SelectedItem
         brightness = [double]$brightness.Value
         pulseBoost = [double]$pulseBoost.Value
         frameMs = [int]$frameMs.Value
         accentDevices = [bool]$accentDevices.Checked
         logEvents = [bool]$logEvents.Checked
+        deviceIntensity = @{
+          mouse = [double]$mouseIntensity.Value
+          mousepad = [double]$mousepadIntensity.Value
+          headset = [double]$headsetIntensity.Value
+          chromalink = [double]$chromalinkIntensity.Value
+        }
         damageThresholds = @{
           chip = [int]$damageChip.Value
           heavy = [int]$damageHeavy.Value

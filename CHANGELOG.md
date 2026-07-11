@@ -6,6 +6,9 @@
 - Added a dedicated MO2 setup guide and clarified that MO2 users should start the Chroma companion from the panel but launch Starfield/SFSE from MO2.
 - Added a keyboard/device demo reel script for filming all major Chroma effects in one pass.
 - Added a Nexus-clean package build that excludes setup executables, command scripts, PowerShell scripts, and logs.
+- Added effect presets (`immersive`, `subtle`, `combatHeavy`, and `readable`) for easier user tuning.
+- Added per-device intensity controls for mouse, mousepad, headset, and Chroma Link accents.
+- Added the new preset and multi-device controls to both the desktop Settings window and the Advanced Panel.
 
 ## v0.1.4-alpha
 

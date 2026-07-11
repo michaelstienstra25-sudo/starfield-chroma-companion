@@ -13,7 +13,7 @@ The alpha includes a Starfield-styled desktop launcher with one START STARFIELD 
 
 The setup assistant can auto-detect Starfield, install the companion app, install the SFSE plugin DLLs, save the Starfield folder in the config, and create optional Desktop/Start Menu shortcuts.
 
-Multi-device Chroma support is now active for keyboard, mouse, mousepad, headset, and chromalink devices. Mouse devices use custom action accents for combat, damage, scanner anomalies, grav/power moments, O2/gas warnings, rewards, menus, and idle state. Headset, mousepad, and chromalink devices receive stronger state-aware pulses. Hardware behavior can still vary by device model, so I am still looking for reports from Naga-class mice, Razer headsets, mousepads, and Chroma Link setups.
+Multi-device Chroma support is now active for keyboard, mouse, mousepad, headset, and chromalink devices. Mouse devices use custom action accents for combat, damage, scanner anomalies, grav/power moments, O2/gas warnings, rewards, menus, and idle state. Headset, mousepad, and chromalink devices receive state-aware pulses. The Settings and Advanced Panel now include effect presets and per-device intensity controls, so users can choose a calmer, more readable, or more combat-heavy feel. Hardware behavior can still vary by device model, so I am still looking for reports from Naga-class mice, Razer headsets, mousepads, and Chroma Link setups.
 
 Required software:
 

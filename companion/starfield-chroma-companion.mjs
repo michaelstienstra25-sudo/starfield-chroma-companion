@@ -14,9 +14,16 @@ const DEFAULT_CONFIG = {
   forceRefreshMs: 1000,
   brightness: 1,
   pulseBoost: 1.45,
+  effectPreset: "immersive",
   logEvents: false,
   logHeartbeats: false,
   accentDevices: true,
+  deviceIntensity: {
+    mouse: 1.2,
+    mousepad: 1.12,
+    headset: 1.18,
+    chromalink: 1.12,
+  },
   artifactFormIds: [],
   damageThresholds: {
     chip: 1,
@@ -28,6 +35,7 @@ const DEFAULT_CONFIG = {
 function mergeConfig(base, override) {
   const merged = { ...base, ...override };
   merged.damageThresholds = { ...base.damageThresholds, ...override?.damageThresholds };
+  merged.deviceIntensity = { ...base.deviceIntensity, ...override?.deviceIntensity };
   merged.artifactFormIds = override?.artifactFormIds ?? base.artifactFormIds;
   return merged;
 }
@@ -50,6 +58,63 @@ const FRAME_MS = CONFIG.frameMs;
 const STALE_MS = CONFIG.staleMs;
 const LOCK_DIR = path.resolve(SCRIPT_DIR, "..", ".runtime", "companion.lock");
 const LOCK_INFO = path.join(LOCK_DIR, "owner.json");
+
+const EFFECT_PRESETS = {
+  immersive: {
+    idleBase: 1,
+    idleFocus: 1,
+    pulse: 1,
+    movement: 1,
+    combat: 1,
+    scanner: 1,
+    reward: 1,
+    device: 1,
+  },
+  subtle: {
+    idleBase: 0.7,
+    idleFocus: 0.78,
+    pulse: 0.74,
+    movement: 0.72,
+    combat: 0.76,
+    scanner: 0.82,
+    reward: 0.86,
+    device: 0.82,
+  },
+  combatHeavy: {
+    idleBase: 0.9,
+    idleFocus: 0.95,
+    pulse: 1.14,
+    movement: 0.98,
+    combat: 1.28,
+    scanner: 0.96,
+    reward: 1.05,
+    device: 1.22,
+  },
+  readable: {
+    idleBase: 1.12,
+    idleFocus: 1.08,
+    pulse: 0.96,
+    movement: 1.06,
+    combat: 1.02,
+    scanner: 1.04,
+    reward: 0.98,
+    device: 1,
+  },
+};
+
+const PRESET = EFFECT_PRESETS[CONFIG.effectPreset] ?? EFFECT_PRESETS.immersive;
+
+function presetScale(kind, amount) {
+  return amount * (PRESET[kind] ?? 1);
+}
+
+function amplify(color, multiplier = 1) {
+  return bgr(
+    Math.min(255, Math.round((color & 0xff) * multiplier)),
+    Math.min(255, Math.round(((color >> 8) & 0xff) * multiplier)),
+    Math.min(255, Math.round(((color >> 16) & 0xff) * multiplier)),
+  );
+}
 
 function parseFormId(id) {
   if (typeof id === "number") return id;
@@ -100,7 +165,7 @@ function scale(color, amount) {
 }
 
 function pulseScale(color, amount) {
-  return scale(color, amount * CONFIG.pulseBoost);
+  return scale(color, presetScale("pulse", amount) * CONFIG.pulseBoost);
 }
 
 const Colors = {
@@ -680,10 +745,12 @@ class LightingState {
     const heartbeat = 0.5 + Math.max(0, Math.sin((this.tick / 11) * Math.PI * 2)) ** 2 * 0.5;
     const moving = now < this.movementPulseUntil;
     const recentCombat = now - this.lastCombatAt < 9000;
-    const base = stale ? 0.12 : 0.18;
-    const focus = stale ? 0.18 : 0.28;
-    const movementBreath = moving ? 0.46 + Math.sin(this.tick * 0.82) * 0.12 : focus * heartbeat;
-    const utilityGlow = stale ? 0.12 : 0.18;
+    const base = presetScale("idleBase", stale ? 0.12 : 0.18);
+    const focus = presetScale("idleFocus", stale ? 0.18 : 0.28);
+    const movementBreath = moving
+      ? presetScale("movement", 0.46 + Math.sin(this.tick * 0.82) * 0.12)
+      : focus * heartbeat;
+    const utilityGlow = presetScale("idleFocus", stale ? 0.12 : 0.18);
 
     for (let row = 0; row < 6; row += 1) {
       for (let col = 0; col < 22; col += 1) {
@@ -701,10 +768,14 @@ class LightingState {
     paint(frame, KeyZones.utility, scale(Colors.constellation, utilityGlow), 0.52);
     paint(frame, KeyZones.systems, scale(Colors.menu, stale ? 0.1 : 0.16), 0.48);
 
-    const combatLift = this.mode === "combat" ? 0.18 : 0;
+    const combatLift = this.mode === "combat" ? presetScale("combat", 0.18) : 0;
     if (combatLift > 0) paint(frame, KeyZones.interact, scale(Colors.warning, combatLift), 0.45);
 
-    const shipColor = this.mode === "shipCombat" ? scale(Colors.warning, 0.72) : this.mode === "ship" ? scale(Colors.grav, 0.58) : scale(Colors.grav, 0.16);
+    const shipColor = this.mode === "shipCombat"
+      ? scale(Colors.warning, presetScale("combat", 0.72))
+      : this.mode === "ship"
+        ? scale(Colors.grav, 0.58)
+        : scale(Colors.grav, presetScale("idleFocus", 0.16));
     paint(frame, KeyZones.ship, shipColor, 0.85);
 
     if (this.mode === "menu") {
@@ -1460,11 +1531,20 @@ class ChromaClient {
   async accentDevices(state) {
     if (!CONFIG.accentDevices) return;
     const accent = state.accentState();
+    const devicePreset = PRESET.device ?? 1;
+    const boostedAccent = {
+      ...accent,
+      mouse: amplify(accent.mouse, devicePreset * (CONFIG.deviceIntensity?.mouse ?? 1)),
+      mouseAlt: amplify(accent.mouseAlt ?? accent.mouse, devicePreset * (CONFIG.deviceIntensity?.mouse ?? 1)),
+      mousepad: amplify(accent.mousepad, devicePreset * (CONFIG.deviceIntensity?.mousepad ?? 1)),
+      headset: amplify(accent.headset, devicePreset * (CONFIG.deviceIntensity?.headset ?? 1)),
+      chromalink: amplify(accent.chromalink, devicePreset * (CONFIG.deviceIntensity?.chromalink ?? 1)),
+    };
     await Promise.all([
-      this.customMouse(accent, state.tick),
-      this.staticDevice("mousepad", accent.mousepad),
-      this.staticDevice("headset", accent.headset),
-      this.staticDevice("chromalink", accent.chromalink),
+      this.customMouse(boostedAccent, state.tick),
+      this.staticDevice("mousepad", boostedAccent.mousepad),
+      this.staticDevice("headset", boostedAccent.headset),
+      this.staticDevice("chromalink", boostedAccent.chromalink),
     ]);
   }
 }

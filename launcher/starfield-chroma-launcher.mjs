@@ -19,9 +19,16 @@ const DEFAULT_CONFIG = {
   staleMs: 15000,
   brightness: 1,
   pulseBoost: 1.45,
+  effectPreset: "immersive",
   logEvents: false,
   logHeartbeats: false,
   accentDevices: true,
+  deviceIntensity: {
+    mouse: 1.2,
+    mousepad: 1.12,
+    headset: 1.18,
+    chromalink: 1.12,
+  },
   starfieldDir: "",
   damageThresholds: {
     chip: 1,
@@ -63,6 +70,10 @@ function loadConfig() {
     ...DEFAULT_CONFIG.damageThresholds,
     ...(config.damageThresholds ?? {}),
   };
+  config.deviceIntensity = {
+    ...DEFAULT_CONFIG.deviceIntensity,
+    ...(config.deviceIntensity ?? {}),
+  };
   return config;
 }
 
@@ -74,6 +85,10 @@ function saveConfig(nextConfig) {
     damageThresholds: {
       ...current.damageThresholds,
       ...(nextConfig.damageThresholds ?? {}),
+    },
+    deviceIntensity: {
+      ...current.deviceIntensity,
+      ...(nextConfig.deviceIntensity ?? {}),
     },
   };
   fs.writeFileSync(CONFIG_PATH, `${JSON.stringify(merged, null, 2)}${os.EOL}`, "utf8");
@@ -392,7 +407,7 @@ main{max-width:1120px;margin:0 auto;padding:28px}h1{font-size:30px;margin:0 0 6p
 .notice{border-color:#5b4a19;background:rgba(58,44,15,.56)}.notice h2{color:var(--gold)}.checklist{margin:10px 0 0;padding-left:20px;color:var(--muted)}.checklist li{margin:6px 0}.checklist strong{color:var(--text)}
 .status{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.pill{border:1px solid var(--line);border-radius:8px;padding:12px;background:#10131e}.pill strong{display:block;margin-bottom:4px}.ok{color:var(--green)}.bad{color:var(--red)}
 button{border:0;border-radius:7px;padding:11px 14px;background:var(--cyan);color:#001014;font-weight:700;cursor:pointer}button.secondary{background:#2b3144;color:var(--text);border:1px solid var(--line)}button.warn{background:var(--gold);color:#1f1300}button.danger{background:var(--red);color:white}
-.buttons{display:flex;flex-wrap:wrap;gap:10px}.help{color:var(--muted);font-size:12px;line-height:1.45;margin:5px 0 10px}.button-help{flex-basis:100%;margin-top:2px}.effect-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.effect{border:1px solid var(--line);border-radius:8px;background:#10131e;padding:12px}.effect button{width:100%;margin-bottom:8px}.effect strong{display:block;margin-bottom:3px}.effect span{display:block;color:var(--muted);font-size:12px;line-height:1.35}label{display:block;margin:12px 0 6px;color:var(--muted);font-size:13px}input[type=text],input[type=number]{width:100%;background:#0d1019;border:1px solid var(--line);border-radius:6px;color:var(--text);padding:10px}input[type=checkbox]{transform:scale(1.15);margin-right:8px}.row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.log{white-space:pre-wrap;background:#070a10;border:1px solid var(--line);border-radius:6px;min-height:72px;padding:12px;color:var(--muted)}
+.buttons{display:flex;flex-wrap:wrap;gap:10px}.help{color:var(--muted);font-size:12px;line-height:1.45;margin:5px 0 10px}.button-help{flex-basis:100%;margin-top:2px}.effect-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.effect{border:1px solid var(--line);border-radius:8px;background:#10131e;padding:12px}.effect button{width:100%;margin-bottom:8px}.effect strong{display:block;margin-bottom:3px}.effect span{display:block;color:var(--muted);font-size:12px;line-height:1.35}label{display:block;margin:12px 0 6px;color:var(--muted);font-size:13px}input[type=text],input[type=number],select{width:100%;background:#0d1019;border:1px solid var(--line);border-radius:6px;color:var(--text);padding:10px}input[type=checkbox]{transform:scale(1.15);margin-right:8px}.row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.log{white-space:pre-wrap;background:#070a10;border:1px solid var(--line);border-radius:6px;min-height:72px;padding:12px;color:var(--muted)}
 @media(max-width:850px){.grid,.top{display:block}.panel{margin-bottom:14px}.status{grid-template-columns:1fr 1fr}.row,.effect-list{grid-template-columns:1fr}}
 </style>
 </head>
@@ -481,6 +496,14 @@ button{border:0;border-radius:7px;padding:11px 14px;background:var(--cyan);color
 
   <section class="panel">
     <h2>Configuration</h2>
+    <label>Effect preset</label>
+    <select id="effectPreset">
+      <option value="immersive">Immersive - balanced default</option>
+      <option value="subtle">Subtle - calmer and less bright</option>
+      <option value="combatHeavy">Combat Heavy - stronger action/device accents</option>
+      <option value="readable">Readable - clearer base key lighting</option>
+    </select>
+    <p class="help">Presets change the overall feel while keeping the same Starfield key logic. Immersive is the current default.</p>
     <div class="row">
       <div><label>Brightness</label><input id="brightness" type="number" min="0.1" max="1" step="0.05"><p class="help">Overall RGB strength. Lower it if the keyboard is too bright.</p></div>
       <div><label>Pulse boost</label><input id="pulseBoost" type="number" min="1" max="2" step="0.05"><p class="help">How much stronger reaction pulses become compared to base lighting.</p></div>
@@ -492,7 +515,15 @@ button{border:0;border-radius:7px;padding:11px 14px;background:var(--cyan);color
       <div><label>Critical damage</label><input id="damageCritical" type="number" min="0" step="1"><p class="help">Threshold for the most urgent damage warning.</p></div>
     </div>
     <label><input id="accentDevices" type="checkbox">Accent devices enabled</label>
-    <p class="help">Sends simplified mood colors to extra Chroma devices such as mouse, mousepad, or headset.</p>
+    <p class="help">Sends mood and action colors to extra Chroma devices such as mouse, mousepad, headset, and Chroma Link.</p>
+    <div class="row">
+      <div><label>Mouse intensity</label><input id="mouseIntensity" type="number" min="0.25" max="2" step="0.05"><p class="help">Boosts or softens mouse action accents.</p></div>
+      <div><label>Mousepad intensity</label><input id="mousepadIntensity" type="number" min="0.25" max="2" step="0.05"><p class="help">Controls mousepad mood and warning brightness.</p></div>
+      <div><label>Headset intensity</label><input id="headsetIntensity" type="number" min="0.25" max="2" step="0.05"><p class="help">Controls broad headset cues for damage, oxygen, combat, and rewards.</p></div>
+    </div>
+    <div class="row">
+      <div><label>Chroma Link intensity</label><input id="chromalinkIntensity" type="number" min="0.25" max="2" step="0.05"><p class="help">Controls ambient strips or linked Chroma devices.</p></div>
+    </div>
     <label><input id="logEvents" type="checkbox">Log events for debugging</label>
     <p class="help">Writes extra event details to logs. Useful while testing, normally off.</p>
     <div class="buttons" style="margin-top:12px"><button onclick="saveConfig()">Save Config</button></div>
@@ -529,6 +560,7 @@ async function refresh() {
     setText('sfse', data.sfseLoaderFound ? 'Found' : 'Missing', data.sfseLoaderFound);
     setText('node', data.node);
     document.getElementById('starfieldDir').value = data.config.starfieldDir || data.starfieldDir || '';
+    document.getElementById('effectPreset').value = data.config.effectPreset || 'immersive';
     document.getElementById('brightness').value = data.config.brightness;
     document.getElementById('pulseBoost').value = data.config.pulseBoost;
     document.getElementById('frameMs').value = data.config.frameMs;
@@ -536,6 +568,10 @@ async function refresh() {
     document.getElementById('damageHeavy').value = data.config.damageThresholds.heavy;
     document.getElementById('damageCritical').value = data.config.damageThresholds.critical;
     document.getElementById('accentDevices').checked = Boolean(data.config.accentDevices);
+    document.getElementById('mouseIntensity').value = data.config.deviceIntensity?.mouse ?? 1.2;
+    document.getElementById('mousepadIntensity').value = data.config.deviceIntensity?.mousepad ?? 1.12;
+    document.getElementById('headsetIntensity').value = data.config.deviceIntensity?.headset ?? 1.18;
+    document.getElementById('chromalinkIntensity').value = data.config.deviceIntensity?.chromalink ?? 1.12;
     document.getElementById('logEvents').checked = Boolean(data.config.logEvents);
   } catch (error) {
     writeLog(error.message);
@@ -562,11 +598,18 @@ function numberValue(id) {
 async function saveConfig() {
   await post('/api/config', {
     starfieldDir: document.getElementById('starfieldDir').value.trim(),
+    effectPreset: document.getElementById('effectPreset').value,
     brightness: numberValue('brightness'),
     pulseBoost: numberValue('pulseBoost'),
     frameMs: numberValue('frameMs'),
     accentDevices: document.getElementById('accentDevices').checked,
     logEvents: document.getElementById('logEvents').checked,
+    deviceIntensity: {
+      mouse: numberValue('mouseIntensity'),
+      mousepad: numberValue('mousepadIntensity'),
+      headset: numberValue('headsetIntensity'),
+      chromalink: numberValue('chromalinkIntensity')
+    },
     damageThresholds: {
       chip: numberValue('damageChip'),
       heavy: numberValue('damageHeavy'),

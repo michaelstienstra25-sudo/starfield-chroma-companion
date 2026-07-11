@@ -6,9 +6,16 @@
   "forceRefreshMs": 1000,
   "brightness": 1,
   "pulseBoost": 1.45,
+  "effectPreset": "immersive",
   "logEvents": false,
   "logHeartbeats": false,
   "accentDevices": true,
+  "deviceIntensity": {
+    "mouse": 1.2,
+    "mousepad": 1.12,
+    "headset": 1.18,
+    "chromalink": 1.12
+  },
   "starfieldDir": "",
   "artifactFormIds": [
     "0x216F87"

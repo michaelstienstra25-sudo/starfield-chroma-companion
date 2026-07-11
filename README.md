@@ -28,7 +28,7 @@ From there you can:
 
 - Launch Starfield with one `START STARFIELD` button.
 - Keep companion and Starfield status visible from the tray icon.
-- Open Settings for brightness, pulse strength, damage thresholds, logging, and your Starfield folder.
+- Open Settings for effect presets, brightness, pulse strength, device intensity, damage thresholds, logging, and your Starfield folder.
 - Open Razer Chroma to check the required Chroma Apps setting.
 - Open the Advanced Panel for Chroma SDK checks, effect previews, and multi-device focus tests.
 
@@ -96,9 +96,11 @@ This is an unofficial community project and is not affiliated with Bethesda, Raz
 - Multi-device Chroma support for keyboard, mouse, mousepad, headset, and chromalink devices.
 - Custom 9x7 mouse effects for combat, damage, scanner anomalies, grav/power moments, O2/gas warnings, rewards, menus, and idle state.
 - Stronger headset, mousepad, and chromalink pulses for damage, combat, scanner, ship, menu, power, and exploration moments.
+- Effect presets for balanced, subtle, combat-heavy, or more readable key lighting.
+- Per-device intensity controls for mouse, mousepad, headset, and Chroma Link accents.
 - Starfield-styled desktop launcher with one `START STARFIELD` button, tray status, settings, and advanced test panel.
 - Single-file setup assistant that detects Starfield, installs the companion, installs SFSE plugin DLLs, and creates optional Desktop/Start Menu shortcuts.
-- Configurable brightness, damage thresholds, logging, Chroma SDK URL, UDP port, and stale timeout.
+- Configurable presets, brightness, device intensity, damage thresholds, logging, Chroma SDK URL, UDP port, and stale timeout.
 
 ## Requirements
 
