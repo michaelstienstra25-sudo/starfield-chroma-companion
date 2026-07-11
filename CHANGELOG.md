@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v0.1.5-alpha
 
 - Added `mo2-start.mjs`, a Mod Organizer 2 helper that opens the control panel from the real mod folder without keeping MO2 unnecessarily locked.
 - Added a dedicated MO2 setup guide and clarified that MO2 users should start the Chroma companion from the panel but launch Starfield/SFSE from MO2.
@@ -9,6 +9,8 @@
 - Added effect presets (`immersive`, `subtle`, `combatHeavy`, and `readable`) for easier user tuning.
 - Added per-device intensity controls for mouse, mousepad, headset, and Chroma Link accents.
 - Added the new preset and multi-device controls to both the desktop Settings window and the Advanced Panel.
+- Added a dedicated takeoff preview button to the Advanced Panel.
+- Improved planet takeoff detection by handling launch/takeoff events and inferring takeoff from loading-to-ship transitions.
 
 ## v0.1.4-alpha
 
