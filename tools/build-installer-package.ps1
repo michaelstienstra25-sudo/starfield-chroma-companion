@@ -4,7 +4,7 @@ $root = Split-Path -Parent $PSScriptRoot
 $packageRoot = Join-Path $root "dist\installer"
 $payload = Join-Path $packageRoot "SetupPayload"
 $setupExe = Join-Path $packageRoot "StarfieldChromaCompanionSetup.exe"
-$singleFileSetupExe = Join-Path $root "StarfieldChromaCompanionSetup-v0.1.4-alpha.exe"
+$singleFileSetupExe = Join-Path $root "StarfieldChromaCompanionSetup-v0.1.6-alpha.exe"
 $iconFile = Join-Path $root "assets\starfield-chroma.ico"
 
 function Import-Ps2Exe {
@@ -69,7 +69,7 @@ Invoke-ps2exe `
   -description "Installer for Starfield Chroma Companion" `
   -company "Starfield Chroma Companion" `
   -product "Starfield Chroma Companion" `
-  -version "0.1.4.0" `
+  -version "0.1.6.0" `
   -noConsole `
   -STA `
   -requireAdmin:$false
@@ -92,12 +92,12 @@ Invoke-ps2exe `
   -description "Self-contained installer for Starfield Chroma Companion" `
   -company "Starfield Chroma Companion" `
   -product "Starfield Chroma Companion" `
-  -version "0.1.4.0" `
+  -version "0.1.6.0" `
   -noConsole `
   -STA `
   -requireAdmin:$false
 
-$zip = Join-Path $root "StarfieldChromaCompanion-v0.1.4-alpha-installer.zip"
+$zip = Join-Path $root "StarfieldChromaCompanion-v0.1.6-alpha-installer.zip"
 Remove-Item -LiteralPath $zip -Force -ErrorAction SilentlyContinue
 Compress-Archive -Path (Join-Path $packageRoot "*") -DestinationPath $zip -Force
 
