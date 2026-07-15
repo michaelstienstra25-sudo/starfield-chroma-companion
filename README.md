@@ -1,46 +1,65 @@
 # Starfield Chroma Companion
 
+[![Latest release](https://img.shields.io/github/v/release/michaelstienstra25-sudo/starfield-chroma-companion?include_prereleases&label=latest%20release)](https://github.com/michaelstienstra25-sudo/starfield-chroma-companion/releases)
+[![Nexus Mods](https://img.shields.io/badge/Nexus%20Mods-Starfield%20Chroma%20Companion-orange)](https://www.nexusmods.com/starfield/mods/17645)
+[![License](https://img.shields.io/github/license/michaelstienstra25-sudo/starfield-chroma-companion)](LICENSE)
+
 ![Starfield Chroma Companion banner](docs/images/starfield-chroma-header.png)
 
 Reactive Razer Chroma lighting for Starfield, powered by SFSE game events and a small Node.js companion app.
 
-[Download on Nexus Mods](https://www.nexusmods.com/starfield/mods/) · [GitHub releases](https://github.com/michaelstienstra25-sudo/starfield-chroma-companion/releases) · [Report an issue](https://github.com/michaelstienstra25-sudo/starfield-chroma-companion/issues)
+[Download on Nexus Mods](https://www.nexusmods.com/starfield/mods/17645) · [GitHub releases](https://github.com/michaelstienstra25-sudo/starfield-chroma-companion/releases) · [Video preview](https://youtu.be/IV01W_cuL2M) · [Report an issue](https://github.com/michaelstienstra25-sudo/starfield-chroma-companion/issues)
 
 This project is currently an early PC-only prototype. It is built for players who run Starfield through SFSE and use Razer Synapse/Chroma devices.
 
 ![Starfield Chroma Companion preview](docs/images/starfield-chroma-gallery.png)
 
+## Choose Your Download
+
+| Use case | Recommended file | Where | Notes |
+| --- | --- | --- | --- |
+| Vortex, MO2, or manual mod-manager install | `StarfieldChromaCompanion-v0.1.6-alpha-nexus-clean.zip` | [Nexus Mods](https://www.nexusmods.com/starfield/mods/17645) | Clean package without `.exe`, `.cmd`, `.bat`, `.ps1`, or log files. |
+| Guided Windows setup | `StarfieldChromaCompanionSetup-v0.1.6-alpha.exe` | [GitHub releases](https://github.com/michaelstienstra25-sudo/starfield-chroma-companion/releases) | Optional installer build for users who prefer a setup assistant. |
+| Source, release notes, issues, and transparency | Repository source code | GitHub | Use GitHub for development notes, issue reports, and source review. |
+
+The Nexus file is the recommended clean mod-manager package. GitHub is used for source code, issue tracking, release notes, development transparency, and the optional installer build.
+
 ## Quick Start
 
-The easiest way to run the alpha is through the included desktop launcher app:
-
-```cmd
-start-tray.cmd
-```
-
-Local builds can also use the compiled launcher:
+The easiest way to run the alpha after installation is through the desktop launcher app:
 
 ```cmd
 StarfieldChromaCompanion.exe
 ```
 
-From there you can:
+The launcher gives you:
 
-- Launch Starfield with one `START STARFIELD` button.
-- Keep companion and Starfield status visible from the tray icon.
-- Open Settings for effect presets, brightness, pulse strength, device intensity, damage thresholds, logging, and your Starfield folder.
-- Open Razer Chroma to check the required Chroma Apps setting.
-- Open the Advanced Panel for Chroma SDK checks, effect previews, and multi-device focus tests.
+- One `START STARFIELD` button.
+- Companion and Starfield status.
+- Settings for effect presets, brightness, pulse strength, device intensity, damage thresholds, logging, and your Starfield folder.
+- A Razer Chroma shortcut for checking the required Chroma Apps setting.
+- An Advanced Panel for Chroma SDK checks, effect previews, and multi-device focus tests.
 
-## Install With Setup Assistant
+The companion must keep running while Starfield is active. If you launch only `Starfield.exe` or only `sfse_loader.exe`, the RGB effects will not start unless the companion is already running.
 
-The easiest install option for most users is the single-file setup assistant:
+## Installation Overview
+
+| Method | Best for | Steps |
+| --- | --- | --- |
+| Nexus/Vortex | Most users who use Vortex | Download the Nexus-clean package, install with Vortex, start the companion with Node.js, then launch Starfield through SFSE. |
+| Mod Organizer 2 | MO2 users | Install the clean package in MO2, add a companion executable using `node.exe` and `.\mo2-start.mjs`, then launch SFSE through MO2. |
+| GitHub setup assistant | Users who want a guided app install | Run the optional setup assistant from GitHub releases. |
+| Manual/dev | Testers and contributors | Clone or extract the repository, start the launcher with Node.js, and configure paths manually. |
+
+## Optional GitHub Setup Assistant
+
+The GitHub release includes an optional single-file setup assistant:
 
 ```text
-StarfieldChromaCompanionSetup-v0.1.4-alpha.exe
+StarfieldChromaCompanionSetup-v0.1.6-alpha.exe
 ```
 
-1. Run `StarfieldChromaCompanionSetup-v0.1.4-alpha.exe`.
+1. Run `StarfieldChromaCompanionSetup-v0.1.6-alpha.exe`.
 2. The setup assistant searches Steam libraries and common install paths for Starfield.
 3. If Starfield is not detected, browse to the folder that contains `sfse_loader.exe`.
 4. Click `Install`.
@@ -59,15 +78,7 @@ It installs the SFSE plugin DLLs to:
 
 It can create optional Desktop and Windows Start Menu shortcuts. The selected Starfield folder is saved in `starfield-chroma.config.json`, so the launcher works even when Starfield is installed outside the default Steam folder.
 
-A zip-based installer package may also be provided as a fallback for users or mod managers that prefer extracted files.
-
-For manual installs, you can also run:
-
-```cmd
-launch-starfield-chroma.cmd
-```
-
-The browser control panel is still available as the advanced/debug view:
+The browser control panel is also available as the advanced/debug view:
 
 ```cmd
 node ".\launcher\starfield-chroma-launcher.mjs"
@@ -78,8 +89,6 @@ To rebuild the Windows launcher executable after changing the tray app:
 ```cmd
 powershell -NoProfile -ExecutionPolicy Bypass -File ".\tools\build-launcher-exe.ps1"
 ```
-
-The companion must keep running while Starfield is active. If you launch only `Starfield.exe` or only `sfse_loader.exe`, the RGB effects will not start unless the companion is already running.
 
 ## Why Use It?
 
@@ -161,7 +170,7 @@ It also installs the companion app to:
 Data\StarfieldChromaCompanion\
 ```
 
-The Vortex package intentionally does not include Windows `.cmd` helper scripts, because some antivirus tools and mod managers flag script files more aggressively. The manual package still includes helper scripts for users who prefer them.
+The Vortex/Nexus-clean package intentionally does not include Windows `.exe`, `.cmd`, `.bat`, or `.ps1` helper files, because those file types are more likely to trigger moderation or antivirus reputation checks on mod-hosting platforms.
 
 ## Install With Mod Organizer 2
 
@@ -190,6 +199,17 @@ If you launch the companion outside MO2, use the real path to the installed MO2 
 The Vortex package contains SFSE plugin DLLs. Some antivirus tools and mod managers may flag DLL-based game mods as suspicious until the files gain more reputation or are rescanned. The Vortex package does not include `.cmd`, `.bat`, or `.ps1` helper scripts.
 
 The source code is public in this repository for transparency. If a file is quarantined, review the warning carefully and only restore or allowlist it if you are comfortable running SFSE plugin mods.
+
+## Troubleshooting
+
+| Problem | Check |
+| --- | --- |
+| Keyboard stays on Spectrum Cycling | Open Razer Chroma, go to `CHROMA APPS`, turn the global Chroma Apps toggle on, and enable `Starfield Chroma Companion`. |
+| No effects in game | Make sure Starfield is launched through SFSE and the companion is running before or during gameplay. |
+| Vortex install works but the companion does not start | Open Command Prompt in `Data\StarfieldChromaCompanion` and run `node ".\launcher\starfield-chroma-launcher.mjs"`. |
+| MO2 install does not react | Start the companion from the real MO2 mod folder or through an MO2 executable using `node.exe` and `.\mo2-start.mjs`. Launch SFSE through MO2. |
+| Effects work once but stop later | Restart the companion, then use the Advanced Panel to run `Register/Test Chroma App`. |
+| GitHub installer is blocked by Windows | Use the Nexus-clean package, or review the source/build yourself before choosing whether to allow the installer. |
 
 ## Manual Install From A Release
 
