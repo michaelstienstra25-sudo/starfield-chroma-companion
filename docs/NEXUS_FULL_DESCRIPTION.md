@@ -40,14 +40,22 @@ Vortex:
 
 1. Download the Vortex package.
 2. Install and enable it with Vortex.
-3. After Vortex deploys the mod, open Command Prompt and run:
+3. Optional one-step Vortex tool:
+   - Target/Binary: node.exe
+   - Start in: your deployed Data\StarfieldChromaCompanion folder
+   - Arguments: .\auto-start-sfse.mjs
+4. Run that Vortex tool to start the companion and launch Starfield through SFSE.
+
+The auto-start helper starts the local launcher service if needed, starts the Chroma companion, launches Starfield through sfse_loader.exe, and lets the existing watchdog shut the companion down when Starfield closes.
+
+Manual control panel option:
 
 ```cmd
 cd /d "C:\Path\To\SteamLibrary\steamapps\common\Starfield\Data\StarfieldChromaCompanion"
 node ".\launcher\starfield-chroma-launcher.mjs"
 ```
 
-4. In the control panel, click Start Companion + SFSE.
+Then click Start Companion + SFSE.
 
 Mod Organizer 2:
 

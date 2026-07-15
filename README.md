@@ -18,7 +18,7 @@ This project is currently an early PC-only prototype. It is built for players wh
 
 | Use case | Recommended file | Where | Notes |
 | --- | --- | --- | --- |
-| Vortex, MO2, or manual mod-manager install | `StarfieldChromaCompanion-v0.1.6-alpha-nexus-clean.zip` | [Nexus Mods](https://www.nexusmods.com/starfield/mods/17645) | Clean package without `.exe`, `.cmd`, `.bat`, `.ps1`, or log files. |
+| Vortex, MO2, or manual mod-manager install | `StarfieldChromaCompanion-v0.1.7-alpha-nexus-clean.zip` | [Nexus Mods](https://www.nexusmods.com/starfield/mods/17645) | Clean package without `.exe`, `.cmd`, `.bat`, `.ps1`, or log files. |
 | Guided Windows setup | `StarfieldChromaCompanionSetup-v0.1.6-alpha.exe` | [GitHub releases](https://github.com/michaelstienstra25-sudo/starfield-chroma-companion/releases) | Optional installer build for users who prefer a setup assistant. |
 | Source, release notes, issues, and transparency | Repository source code | GitHub | Use GitHub for development notes, issue reports, and source review. |
 
@@ -46,7 +46,7 @@ The companion must keep running while Starfield is active. If you launch only `S
 
 | Method | Best for | Steps |
 | --- | --- | --- |
-| Nexus/Vortex | Most users who use Vortex | Download the Nexus-clean package, install with Vortex, start the companion with Node.js, then launch Starfield through SFSE. |
+| Nexus/Vortex | Most users who use Vortex | Download the Nexus-clean package, install with Vortex, then run `auto-start-sfse.mjs` with Node.js or use the control panel. |
 | Mod Organizer 2 | MO2 users | Install the clean package in MO2, add a companion executable using `node.exe` and `.\mo2-start.mjs`, then launch SFSE through MO2. |
 | GitHub setup assistant | Users who want a guided app install | Run the optional setup assistant from GitHub releases. |
 | Manual/dev | Testers and contributors | Clone or extract the repository, start the launcher with Node.js, and configure paths manually. |
@@ -149,14 +149,22 @@ Useful reports include:
 
 1. Download the Vortex package from Nexus Mods.
 2. Install and enable it with Vortex.
-3. Start the control panel from your Starfield Data folder with Node.js:
+3. For a one-step launch flow, add a Vortex tool:
+   - Target/Binary: `node.exe`
+   - Start in: your deployed `Data\StarfieldChromaCompanion` folder
+   - Arguments: `.\auto-start-sfse.mjs`
+4. Run that tool when you want to play.
+
+The auto-start helper starts the local launcher service if needed, starts the Chroma companion, launches Starfield through `sfse_loader.exe`, and lets the existing watchdog shut the companion down when Starfield closes.
+
+You can also start the control panel manually from your Starfield Data folder with Node.js:
 
 ```cmd
 cd /d "C:\Path\To\SteamLibrary\steamapps\common\Starfield\Data\StarfieldChromaCompanion"
 node ".\launcher\starfield-chroma-launcher.mjs"
 ```
 
-4. Click `Start Companion + SFSE`, or start the companion first and then launch Starfield through SFSE.
+Then click `Start Companion + SFSE`, or start the companion first and then launch Starfield through SFSE.
 
 The Vortex package installs the SFSE plugins to:
 
@@ -206,6 +214,7 @@ The source code is public in this repository for transparency. If a file is quar
 | --- | --- |
 | Keyboard stays on Spectrum Cycling | Open Razer Chroma, go to `CHROMA APPS`, turn the global Chroma Apps toggle on, and enable `Starfield Chroma Companion`. |
 | No effects in game | Make sure Starfield is launched through SFSE and the companion is running before or during gameplay. |
+| Vortex users want one launch action | Add a Vortex tool that runs `node.exe` with `.\auto-start-sfse.mjs` from `Data\StarfieldChromaCompanion`. |
 | Vortex install works but the companion does not start | Open Command Prompt in `Data\StarfieldChromaCompanion` and run `node ".\launcher\starfield-chroma-launcher.mjs"`. |
 | MO2 install does not react | Start the companion from the real MO2 mod folder or through an MO2 executable using `node.exe` and `.\mo2-start.mjs`. Launch SFSE through MO2. |
 | Effects work once but stop later | Restart the companion, then use the Advanced Panel to run `Register/Test Chroma App`. |

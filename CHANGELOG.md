@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.1.7-alpha
+
+- Added `auto-start-sfse.mjs`, a Nexus-clean Node launch helper for Vortex/direct users that starts the launcher service, starts the Chroma companion, and launches Starfield through SFSE in one step.
+- Documented a safer auto-start workflow that avoids putting helper executables or command/PowerShell scripts in the Nexus package.
+
 ## v0.1.6-alpha
 
 - Added automatic full app shutdown after a Starfield session ends: when Starfield closes, the desktop app now stops the companion and launcher server and exits itself.
