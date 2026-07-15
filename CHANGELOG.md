@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v0.1.6-alpha
 
 - Added automatic full app shutdown after a Starfield session ends: when Starfield closes, the desktop app now stops the companion and launcher server and exits itself.
 - Added the same Starfield-close watchdog to the launcher server, so cleanup also works when the companion is started from the browser panel or shortcut flow.

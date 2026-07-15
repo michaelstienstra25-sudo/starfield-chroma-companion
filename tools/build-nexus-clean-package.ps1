@@ -2,7 +2,7 @@ $ErrorActionPreference = "Stop"
 
 $root = Split-Path -Parent $PSScriptRoot
 $stage = Join-Path $root "dist\nexus-clean"
-$zip = Join-Path $root "StarfieldChromaCompanion-v0.1.5-alpha-nexus-clean.zip"
+$zip = Join-Path $root "StarfieldChromaCompanion-v0.1.6-alpha-nexus-clean.zip"
 
 Remove-Item -LiteralPath $stage -Recurse -Force -ErrorAction SilentlyContinue
 Remove-Item -LiteralPath $zip -Force -ErrorAction SilentlyContinue
