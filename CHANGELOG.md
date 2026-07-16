@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.1.9-alpha
+
+- Fixed the desktop app becoming visible but completely unresponsive when the local launcher status endpoint stalled.
+- Added hard status-request timeouts and disabled persistent HTTP connections so launcher problems cannot block the WinForms UI thread indefinitely.
+- Changed launcher detection to a fast local port check, preventing duplicate launcher processes when an existing launcher is already listening.
+- Added a cached background status refresh in the launcher so `/api/status` responds immediately while slower Windows process checks run separately.
+- Changed the main-window close button to fully shut down the companion app instead of silently hiding it in the system tray.
+- Added explicit launcher cleanup plus a parent-process watchdog so closing or crashing the desktop app cannot leave its local control server running.
+- Added cleanup of stale Razer Chroma SDK helper processes before companion startup and after companion shutdown.
+
 ## v0.1.8-alpha
 
 - Added visible Chroma confirmation pulses when the companion starts and stops.

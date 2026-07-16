@@ -63,37 +63,80 @@ Add-Type -AssemblyName System.Drawing
 [System.Windows.Forms.Application]::EnableVisualStyles()
 
 function Start-Launcher {
-  if (Test-LauncherRunning) { return }
-  Start-Process -FilePath $node -ArgumentList "`"$launcher`" --no-open" -WorkingDirectory $root -WindowStyle Hidden
+  if (Test-LauncherPortOpen) { return }
+  $script:LauncherProcess = Start-Process -FilePath $node -ArgumentList "`"$launcher`" --no-open --desktop-parent=$PID" -WorkingDirectory $root -WindowStyle Hidden -PassThru
+  $script:LauncherProcessId = $script:LauncherProcess.Id
   Start-Sleep -Milliseconds 900
 }
 
-function Test-LauncherRunning {
+function Test-LauncherPortOpen {
+  $client = New-Object System.Net.Sockets.TcpClient
   try {
-    Invoke-RestMethod -Uri "$url/api/status" -Method Get -TimeoutSec 1 | Out-Null
+    $connect = $client.BeginConnect("127.0.0.1", 47322, $null, $null)
+    if (-not $connect.AsyncWaitHandle.WaitOne(150)) {
+      return $false
+    }
+    $client.EndConnect($connect)
     return $true
   } catch {
     return $false
+  } finally {
+    $client.Dispose()
   }
 }
 
-function Invoke-Api([string]$Path, [string]$Method = "Get", $Body = $null) {
-  Start-Launcher
-  $params = @{
-    Uri = "$url$Path"
-    Method = $Method
-    TimeoutSec = 6
-  }
+function Invoke-HttpJson([string]$Uri, [string]$Method = "GET", $Body = $null, [int]$TimeoutMs = 6000) {
+  $request = [System.Net.HttpWebRequest]::Create($Uri)
+  $request.Method = $Method.ToUpperInvariant()
+  $request.Timeout = $TimeoutMs
+  $request.ReadWriteTimeout = $TimeoutMs
+  $request.KeepAlive = $false
+  $request.Proxy = $null
+  $request.Accept = "application/json"
+
   if ($null -ne $Body) {
-    $params.ContentType = "application/json"
-    $params.Body = ($Body | ConvertTo-Json -Depth 8)
+    $json = $Body | ConvertTo-Json -Depth 8
+    $bytes = [System.Text.Encoding]::UTF8.GetBytes($json)
+    $request.ContentType = "application/json"
+    $request.ContentLength = $bytes.Length
+    $stream = $request.GetRequestStream()
+    try {
+      $stream.Write($bytes, 0, $bytes.Length)
+    } finally {
+      $stream.Dispose()
+    }
   }
-  return Invoke-RestMethod @params
+
+  $response = $request.GetResponse()
+  try {
+    $reader = New-Object System.IO.StreamReader($response.GetResponseStream())
+    try {
+      $text = $reader.ReadToEnd()
+    } finally {
+      $reader.Dispose()
+    }
+  } finally {
+    $response.Dispose()
+  }
+
+  if ([string]::IsNullOrWhiteSpace($text)) {
+    return $null
+  }
+  return $text | ConvertFrom-Json
+}
+
+function Test-LauncherRunning {
+  return Test-LauncherPortOpen
+}
+
+function Invoke-Api([string]$Path, [string]$Method = "Get", $Body = $null, [int]$TimeoutMs = 6000) {
+  Start-Launcher
+  return Invoke-HttpJson "$url$Path" $Method $Body $TimeoutMs
 }
 
 function Get-Status {
   try {
-    return Invoke-Api "/api/status"
+    return Invoke-Api "/api/status" "Get" $null 750
   } catch {
     return $null
   }
@@ -112,6 +155,12 @@ function Stop-AppCompletely([bool]$Silent = $false) {
     if (-not $Silent) { Show-Error $_.Exception.Message }
   } finally {
     $notify.Visible = $false
+    if ($script:LauncherProcessId) {
+      try {
+        Stop-Process -Id $script:LauncherProcessId -Force -ErrorAction SilentlyContinue
+      } catch {
+      }
+    }
     [System.Windows.Forms.Application]::Exit()
   }
 }
@@ -562,9 +611,9 @@ $notify.add_DoubleClick({ $mainForm.Show(); $mainForm.WindowState = "Normal"; $m
 
 $mainForm.add_FormClosing({
   param($sender, $eventArgs)
-  if ($eventArgs.CloseReason -eq [System.Windows.Forms.CloseReason]::UserClosing) {
+  if ($eventArgs.CloseReason -eq [System.Windows.Forms.CloseReason]::UserClosing -and -not $script:AppExiting) {
     $eventArgs.Cancel = $true
-    $mainForm.Hide()
+    Stop-AppCompletely $true
   }
 })
 

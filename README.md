@@ -18,8 +18,8 @@ This project is currently an early PC-only prototype. It is built for players wh
 
 | Use case | Recommended file | Where | Notes |
 | --- | --- | --- | --- |
-| Vortex, MO2, or manual mod-manager install | `StarfieldChromaCompanion-v0.1.8-alpha-nexus-clean.zip` | [Nexus Mods](https://www.nexusmods.com/starfield/mods/17645) | Clean package without `.exe`, `.cmd`, `.bat`, `.ps1`, or log files. |
-| Guided Windows setup | `StarfieldChromaCompanionSetup-v0.1.8-alpha.exe` | [GitHub releases](https://github.com/michaelstienstra25-sudo/starfield-chroma-companion/releases) | Optional installer build for users who prefer a setup assistant. |
+| Vortex, MO2, or manual mod-manager install | `StarfieldChromaCompanion-v0.1.9-alpha-nexus-clean.zip` | [Nexus Mods](https://www.nexusmods.com/starfield/mods/17645) | Clean package without `.exe`, `.cmd`, `.bat`, `.ps1`, or log files. |
+| Guided Windows setup | `StarfieldChromaCompanionSetup-v0.1.9-alpha.exe` | [GitHub releases](https://github.com/michaelstienstra25-sudo/starfield-chroma-companion/releases) | Optional installer build for users who prefer a setup assistant. |
 | Source, release notes, issues, and transparency | Repository source code | GitHub | Use GitHub for development notes, issue reports, and source review. |
 
 The Nexus file is the recommended clean mod-manager package. GitHub is used for source code, issue tracking, release notes, development transparency, and the optional installer build.
@@ -56,10 +56,10 @@ The companion must keep running while Starfield is active. If you launch only `S
 The GitHub release includes an optional single-file setup assistant:
 
 ```text
-StarfieldChromaCompanionSetup-v0.1.8-alpha.exe
+StarfieldChromaCompanionSetup-v0.1.9-alpha.exe
 ```
 
-1. Run `StarfieldChromaCompanionSetup-v0.1.8-alpha.exe`.
+1. Run `StarfieldChromaCompanionSetup-v0.1.9-alpha.exe`.
 2. The setup assistant searches Steam libraries and common install paths for Starfield.
 3. If Starfield is not detected, browse to the folder that contains `sfse_loader.exe`.
 4. Click `Install`.

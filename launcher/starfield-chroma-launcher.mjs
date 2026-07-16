@@ -12,6 +12,9 @@ const CONFIG_PATH = path.join(ROOT_DIR, "starfield-chroma.config.json");
 const COMPANION_SCRIPT = path.join(ROOT_DIR, "companion", "starfield-chroma-companion.mjs");
 const PORT = Number(process.env.STARFIELD_CHROMA_LAUNCHER_PORT ?? 47322);
 const STARFIELD_MONITOR_MS = 3000;
+const DESKTOP_PARENT_PID = Number(
+  process.argv.find((argument) => argument.startsWith("--desktop-parent="))?.split("=")[1] ?? 0,
+);
 
 const DEFAULT_CONFIG = {
   chromaRoot: "http://localhost:54235/razer/chromasdk",
@@ -40,6 +43,17 @@ const DEFAULT_CONFIG = {
 
 let starfieldMonitor = null;
 let starfieldObservedRunning = false;
+let desktopParentShutdownStarted = false;
+let statusRefreshPromise = null;
+let statusCache = {
+  rootDir: ROOT_DIR,
+  config: loadConfig(),
+  companionRunning: false,
+  starfieldRunning: false,
+  sfseLoaderFound: false,
+  starfieldDir: "",
+  node: process.execPath,
+};
 
 const TEST_EVENTS = {
   companionStart: "companion.start",
@@ -165,11 +179,34 @@ async function companionRunning() {
   return matches.length > 0;
 }
 
+async function cleanupStaleChromaSdkHelpers() {
+  const script = `
+$ErrorActionPreference='SilentlyContinue'
+$helpers = Get-CimInstance Win32_Process | Where-Object {
+  $_.Name -eq 'StarfieldChromaCompanion.exe' -and
+  $_.ExecutablePath -like 'C:\\ProgramData\\Razer Chroma SDK\\Apps\\StarfieldChromaCompanion\\*'
+}
+foreach ($helper in $helpers) {
+  Stop-Process -Id $helper.ProcessId -Force -ErrorAction SilentlyContinue
+}
+$helpers | Select-Object ProcessId,ExecutablePath | ConvertTo-Json -Compress
+`;
+  const result = await execPowerShell(script);
+  if (!result.stdout) return { cleaned: 0 };
+  try {
+    const parsed = JSON.parse(result.stdout);
+    return { cleaned: Array.isArray(parsed) ? parsed.length : 1 };
+  } catch {
+    return { cleaned: 0 };
+  }
+}
+
 async function startCompanion() {
   if (await companionRunning()) {
     await sendUdpEvent("companionStart").catch(() => {});
     return { started: false, message: "Companion is already running. Sent a Chroma confirmation pulse." };
   }
+  await cleanupStaleChromaSdkHelpers();
   const out = fs.openSync(path.join(ROOT_DIR, "companion.log"), "a");
   const err = fs.openSync(path.join(ROOT_DIR, "companion.err.log"), "a");
   const child = childProcess.spawn(process.execPath, [COMPANION_SCRIPT], {
@@ -192,6 +229,7 @@ async function stopCompanion() {
   const ids = matches.map((item) => Number(item.ProcessId)).filter(Number.isFinite);
   if (!ids.length) return { stopped: false, message: "No companion process id found." };
   const result = await execPowerShell(`Stop-Process -Id ${ids.join(",")} -Force`);
+  await cleanupStaleChromaSdkHelpers();
   return { stopped: result.ok, message: result.ok ? "Companion stopped after an amber/red Chroma confirmation pulse." : result.stderr };
 }
 
@@ -222,6 +260,21 @@ function armStarfieldAutoShutdown() {
     }
   }, STARFIELD_MONITOR_MS);
   starfieldMonitor.unref?.();
+}
+
+function armDesktopParentMonitor() {
+  if (!Number.isInteger(DESKTOP_PARENT_PID) || DESKTOP_PARENT_PID <= 0) return;
+  const timer = setInterval(async () => {
+    try {
+      process.kill(DESKTOP_PARENT_PID, 0);
+    } catch {
+      if (desktopParentShutdownStarted) return;
+      desktopParentShutdownStarted = true;
+      clearInterval(timer);
+      await shutdownLauncher();
+    }
+  }, 1000);
+  timer.unref?.();
 }
 
 async function startStarfield() {
@@ -349,7 +402,10 @@ async function testChromaSdk() {
 async function status() {
   const config = loadConfig();
   const starfieldDir = findStarfieldDir(config);
-  const starfieldRunning = await isProcessRunning("Starfield");
+  const [starfieldRunning, isCompanionRunning] = await Promise.all([
+    isProcessRunning("Starfield"),
+    companionRunning(),
+  ]);
   if (starfieldRunning) {
     starfieldObservedRunning = true;
     armStarfieldAutoShutdown();
@@ -357,12 +413,31 @@ async function status() {
   return {
     rootDir: ROOT_DIR,
     config,
-    companionRunning: await companionRunning(),
+    companionRunning: isCompanionRunning,
     starfieldRunning,
     sfseLoaderFound: Boolean(starfieldDir),
     starfieldDir,
     node: process.execPath,
   };
+}
+
+function refreshStatusCache() {
+  if (statusRefreshPromise) return statusRefreshPromise;
+  statusRefreshPromise = status()
+    .then((nextStatus) => {
+      statusCache = nextStatus;
+      return nextStatus;
+    })
+    .catch(() => statusCache)
+    .finally(() => {
+      statusRefreshPromise = null;
+    });
+  return statusRefreshPromise;
+}
+
+function getCachedStatus() {
+  void refreshStatusCache();
+  return statusCache;
 }
 
 function readRequestBody(request) {
@@ -395,7 +470,7 @@ async function route(request, response) {
       return;
     }
     if (request.method === "GET" && request.url === "/api/status") {
-      respondJson(response, 200, await status());
+      respondJson(response, 200, getCachedStatus());
       return;
     }
     if (request.method === "POST" && request.url === "/api/config") {
@@ -713,6 +788,12 @@ if (process.argv.includes("--status-once")) {
   server.listen(PORT, "127.0.0.1", () => {
     const url = `http://127.0.0.1:${PORT}/`;
     console.log(`Starfield Chroma Control Panel: ${url}`);
+    armDesktopParentMonitor();
+    void refreshStatusCache();
+    const statusRefreshTimer = setInterval(() => {
+      void refreshStatusCache();
+    }, STARFIELD_MONITOR_MS);
+    statusRefreshTimer.unref?.();
     if (!process.argv.includes("--no-open")) openBrowser(url);
   });
 }
