@@ -1,6 +1,6 @@
-Recommended installer for most users.
+Optional GitHub setup assistant for users who prefer a guided Windows install.
 
-Run StarfieldChromaCompanionSetup-v0.1.4-alpha.exe.
+Nexus/Vortex users should normally use the Nexus-clean package instead.
 
 The setup assistant:
 - Searches Steam libraries and common install paths for Starfield.

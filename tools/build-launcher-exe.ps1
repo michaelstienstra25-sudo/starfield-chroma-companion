@@ -35,7 +35,7 @@ Invoke-ps2exe `
   -description "Starfield Chroma Companion launcher" `
   -company "Starfield Chroma Companion" `
   -product "Starfield Chroma Companion" `
-  -version "0.1.4.0" `
+  -version "0.1.8.0" `
   -noConsole `
   -STA `
   -requireAdmin:$false

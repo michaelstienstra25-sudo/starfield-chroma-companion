@@ -42,6 +42,9 @@ let starfieldMonitor = null;
 let starfieldObservedRunning = false;
 
 const TEST_EVENTS = {
+  companionStart: "companion.start",
+  companionStop: "companion.stop",
+  chromaCheck: "chroma.check",
   damage: "player.damage",
   heavyDamage: "player.trueDamage",
   oxygen: "oxygen.danger",
@@ -55,6 +58,7 @@ const TEST_EVENTS = {
 };
 
 const TEST_SEQUENCES = {
+  chromaReadiness: ["companionStart", "chromaCheck", "heavyDamage", "scannerAnomaly", "grav", "power", "companionStop"],
   deviceFocus: ["heavyDamage", "oxygen", "scannerAnomaly", "takeoff", "grav", "power"],
   combatFocus: ["damage", "heavyDamage", "damage", "heavyDamage"],
   explorationFocus: ["scanner", "scannerAnomaly", "power", "clear"],
@@ -162,7 +166,10 @@ async function companionRunning() {
 }
 
 async function startCompanion() {
-  if (await companionRunning()) return { started: false, message: "Companion is already running." };
+  if (await companionRunning()) {
+    await sendUdpEvent("companionStart").catch(() => {});
+    return { started: false, message: "Companion is already running. Sent a Chroma confirmation pulse." };
+  }
   const out = fs.openSync(path.join(ROOT_DIR, "companion.log"), "a");
   const err = fs.openSync(path.join(ROOT_DIR, "companion.err.log"), "a");
   const child = childProcess.spawn(process.execPath, [COMPANION_SCRIPT], {
@@ -172,16 +179,20 @@ async function startCompanion() {
     windowsHide: false,
   });
   child.unref();
-  return { started: true, message: "Companion started." };
+  await wait(900);
+  await sendUdpEvent("companionStart").catch(() => {});
+  return { started: true, message: "Companion started. Watch for a green/cyan Chroma confirmation pulse." };
 }
 
 async function stopCompanion() {
   const matches = await findNodeProcesses("starfield-chroma-companion.mjs");
   if (!matches.length) return { stopped: false, message: "Companion was not running." };
+  await sendUdpEvent("companionStop").catch(() => {});
+  await wait(1100);
   const ids = matches.map((item) => Number(item.ProcessId)).filter(Number.isFinite);
   if (!ids.length) return { stopped: false, message: "No companion process id found." };
   const result = await execPowerShell(`Stop-Process -Id ${ids.join(",")} -Force`);
-  return { stopped: result.ok, message: result.ok ? "Companion stopped." : result.stderr };
+  return { stopped: result.ok, message: result.ok ? "Companion stopped after an amber/red Chroma confirmation pulse." : result.stderr };
 }
 
 async function shutdownLauncher() {
@@ -420,6 +431,10 @@ async function route(request, response) {
       respondJson(response, 200, await testChromaSdk());
       return;
     }
+    if (request.method === "POST" && request.url === "/api/test-chroma-effects") {
+      respondJson(response, 200, await sendUdpSequence("chromaReadiness"));
+      return;
+    }
     if (request.method === "POST" && request.url === "/api/test-event") {
       const body = await readRequestBody(request);
       respondJson(response, 200, await sendUdpEvent(body.type ?? "damage"));
@@ -449,7 +464,7 @@ function renderHtml() {
 main{max-width:1120px;margin:0 auto;padding:28px}h1{font-size:30px;margin:0 0 6px}h2{font-size:18px;margin:0 0 14px}.muted{color:var(--muted)}
 .top{display:flex;justify-content:space-between;gap:18px;align-items:flex-start;margin-bottom:22px}.grid{display:grid;grid-template-columns:1.1fr .9fr;gap:18px}.panel{background:rgba(21,24,36,.92);border:1px solid var(--line);border-radius:8px;padding:18px}
 .notice{border-color:#5b4a19;background:rgba(58,44,15,.56)}.notice h2{color:var(--gold)}.checklist{margin:10px 0 0;padding-left:20px;color:var(--muted)}.checklist li{margin:6px 0}.checklist strong{color:var(--text)}
-.status{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.pill{border:1px solid var(--line);border-radius:8px;padding:12px;background:#10131e}.pill strong{display:block;margin-bottom:4px}.ok{color:var(--green)}.bad{color:var(--red)}
+.status{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}.pill{border:1px solid var(--line);border-radius:8px;padding:12px;background:#10131e}.pill strong{display:block;margin-bottom:4px}.ok{color:var(--green)}.bad{color:var(--red)}.warnText{color:var(--gold)}
 button{border:0;border-radius:7px;padding:11px 14px;background:var(--cyan);color:#001014;font-weight:700;cursor:pointer}button.secondary{background:#2b3144;color:var(--text);border:1px solid var(--line)}button.warn{background:var(--gold);color:#1f1300}button.danger{background:var(--red);color:white}
 .buttons{display:flex;flex-wrap:wrap;gap:10px}.help{color:var(--muted);font-size:12px;line-height:1.45;margin:5px 0 10px}.button-help{flex-basis:100%;margin-top:2px}.effect-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.effect{border:1px solid var(--line);border-radius:8px;background:#10131e;padding:12px}.effect button{width:100%;margin-bottom:8px}.effect strong{display:block;margin-bottom:3px}.effect span{display:block;color:var(--muted);font-size:12px;line-height:1.35}label{display:block;margin:12px 0 6px;color:var(--muted);font-size:13px}input[type=text],input[type=number],select{width:100%;background:#0d1019;border:1px solid var(--line);border-radius:6px;color:var(--text);padding:10px}input[type=checkbox]{transform:scale(1.15);margin-right:8px}.row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.log{white-space:pre-wrap;background:#070a10;border:1px solid var(--line);border-radius:6px;min-height:72px;padding:12px;color:var(--muted)}
 @media(max-width:850px){.grid,.top{display:block}.panel{margin-bottom:14px}.status{grid-template-columns:1fr 1fr}.row,.effect-list{grid-template-columns:1fr}}
@@ -474,16 +489,18 @@ button{border:0;border-radius:7px;padding:11px 14px;background:var(--cyan);color
       <div class="pill"><strong>Companion</strong><span id="companion">...</span></div>
       <div class="pill"><strong>Starfield</strong><span id="starfield">...</span></div>
       <div class="pill"><strong>SFSE Loader</strong><span id="sfse">...</span></div>
+      <div class="pill"><strong>Chroma Takeover</strong><span id="takeover">...</span></div>
       <div class="pill"><strong>Node</strong><span id="node" class="muted">...</span></div>
     </div>
   </section>
 
   <section class="panel notice">
     <h2>Required Razer Chroma Apps Setting</h2>
-    <p class="muted">Razer can accept SDK commands while still leaving the keyboard on Spectrum Cycling if Chroma Apps is disabled. If effects do not appear on the keyboard, check this first.</p>
+    <p class="muted"><strong>Important:</strong> enable Chroma Apps in Razer Chroma. If this is off, the SDK can connect successfully but your devices may stay on Spectrum Cycling and the game effects will not take over.</p>
     <div class="buttons">
       <button class="warn" onclick="post('/api/open-razer-chroma')">Open Razer Chroma</button>
-      <button class="secondary" onclick="post('/api/test-chroma')">Register/Test Chroma App</button>
+      <button class="secondary" onclick="post('/api/test-chroma')">SDK Registration Check</button>
+      <button onclick="post('/api/test-chroma-effects')">Test Chroma Effects</button>
     </div>
     <ol class="checklist">
       <li>Open <strong>Razer Chroma</strong>.</li>
@@ -500,10 +517,11 @@ button{border:0;border-radius:7px;padding:11px 14px;background:var(--cyan);color
       <p class="help">Use these controls when debugging. The main desktop app normally handles this with one START STARFIELD button.</p>
       <div class="buttons">
         <button onclick="post('/api/start-companion')">Start Companion</button>
-        <button class="secondary" onclick="post('/api/start-starfield')">Start SFSE</button>
-        <button class="danger" onclick="post('/api/stop-companion')">Stop Companion</button>
-        <button class="warn" onclick="post('/api/test-chroma')">Test Chroma SDK</button>
-        <div class="help button-help">Start Companion runs the RGB engine. Start SFSE launches Starfield through sfse_loader.exe. Test Chroma SDK only checks the Razer connection; it does not prove Chroma Apps is enabled.</div>
+      <button class="secondary" onclick="post('/api/start-starfield')">Start SFSE</button>
+      <button class="danger" onclick="post('/api/stop-companion')">Stop Companion</button>
+      <button class="warn" onclick="post('/api/test-chroma')">SDK Check</button>
+      <button onclick="post('/api/test-chroma-effects')">Test Effects</button>
+      <div class="help button-help">Start Companion runs the RGB engine. Start SFSE launches Starfield through sfse_loader.exe. SDK Check only verifies the local Razer SDK. Test Effects uses the real companion pipeline and should visibly pulse keyboard, mouse, mousepad, headset, and Chroma Link devices.</div>
       </div>
       <label>Starfield folder</label>
       <input id="starfieldDir" type="text" placeholder="C:\\Path\\To\\SteamLibrary\\steamapps\\common\\Starfield">
@@ -533,6 +551,7 @@ button{border:0;border-radius:7px;padding:11px 14px;background:var(--cyan);color
     <p class="help">Use these when checking whether mouse, mousepad, headset, and Chroma Link devices are reacting clearly enough. Keep Chroma Apps enabled in Razer Chroma while testing.</p>
     <div class="effect-list">
       <div class="effect"><button class="warn" onclick="sequenceTest('deviceFocus')">All Devices</button><strong>Full device pass</strong><span>Runs damage, environment, anomaly, grav, and power moments with stronger extra-device accents.</span></div>
+      <div class="effect"><button onclick="post('/api/test-chroma-effects')">Chroma Readiness</button><strong>Start/stop plus devices</strong><span>Runs companion start, device check, action pulses, and companion stop confirmation.</span></div>
       <div class="effect"><button class="secondary" onclick="sequenceTest('combatFocus')">Combat Devices</button><strong>Mouse and headset impact</strong><span>Repeats hit pulses so you can judge mouse/headset visibility during action.</span></div>
       <div class="effect"><button class="secondary" onclick="sequenceTest('explorationFocus')">Explore Devices</button><strong>Scanner and power flow</strong><span>Previews calmer exploration, scanner anomaly, and power effects.</span></div>
       <div class="effect"><button class="danger" onclick="eventTest('clear')">Clear</button><strong>Stop preview</strong><span>Returns lighting to the base state after testing.</span></div>
@@ -603,6 +622,9 @@ async function refresh() {
     setText('companion', data.companionRunning ? 'Running' : 'Stopped', data.companionRunning);
     setText('starfield', data.starfieldRunning ? 'Running' : 'Stopped', data.starfieldRunning);
     setText('sfse', data.sfseLoaderFound ? 'Found' : 'Missing', data.sfseLoaderFound);
+    const takeover = document.getElementById('takeover');
+    takeover.textContent = data.companionRunning ? 'Active if Chroma Apps is enabled' : 'Not active';
+    takeover.className = data.companionRunning ? 'warnText' : 'bad';
     setText('node', data.node);
     document.getElementById('starfieldDir').value = data.config.starfieldDir || data.starfieldDir || '';
     document.getElementById('effectPreset').value = data.config.effectPreset || 'immersive';

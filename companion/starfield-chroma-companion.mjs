@@ -609,6 +609,15 @@ class LightingState {
       case "effects.clear":
         this.clearSustainedEffects();
         break;
+      case "companion.start":
+        this.push("controlStart", 42);
+        break;
+      case "companion.stop":
+        this.push("controlStop", 42);
+        break;
+      case "chroma.check":
+        this.push("chromaCheck", 88);
+        break;
       case "takeoff.preview":
       case "ship.takeoff":
       case "ship.launch":
@@ -869,6 +878,9 @@ class LightingState {
       if (pulse.type === "lifeState") this.damagePulse(frame, progress, strength * 0.8);
       if (pulse.type === "bleedout") this.bleedoutPulse(frame, progress, strength);
       if (pulse.type === "combat") this.combatPulse(frame, progress, strength);
+      if (pulse.type === "controlStart") this.controlStartPulse(frame, progress, strength);
+      if (pulse.type === "controlStop") this.controlStopPulse(frame, progress, strength);
+      if (pulse.type === "chromaCheck") this.chromaCheckPulse(frame, progress, strength);
       if (pulse.type === "weaponFired") paint(frame, KeyZones.interact, pulseScale(Colors.engine, strength * 0.85), 0.75);
       if (pulse.type === "ammo") paint(frame, KeyZones.quickslots, pulseScale(Colors.oxygen, strength * 0.9), 0.9);
       if (pulse.type === "reload") paint(frame, KeyZones.interact, pulseScale(Colors.engine, strength), 0.98);
@@ -904,6 +916,33 @@ class LightingState {
     paint(frame, KeyZones.movement, pulseScale(Colors.damage, hit), 0.96);
     paint(frame, KeyZones.interact, pulseScale(Colors.damage, hit * 0.9), 0.92);
     paint(frame, KeyZones.quickslots, pulseScale(Colors.warning, hit * 0.75), 0.78);
+  }
+
+  controlStartPulse(frame, progress, strength) {
+    const glow = strength * (0.55 + Math.max(0, Math.sin(progress * Math.PI * 4)) * 0.45);
+    this.sweepPulse(frame, Colors.scanner, progress, glow * 0.85);
+    this.centerPulse(frame, Colors.oxygen, progress, glow * 0.55);
+    paint(frame, KeyZones.movement, pulseScale(Colors.scanner, glow), 0.95);
+    paint(frame, KeyZones.utility, pulseScale(Colors.oxygen, glow * 0.85), 0.88);
+    paint(frame, KeyZones.menus, pulseScale(Colors.constellation, glow * 0.5), 0.72);
+  }
+
+  controlStopPulse(frame, progress, strength) {
+    const fade = strength * (0.48 + Math.max(0, Math.sin(progress * Math.PI * 3)) * 0.52);
+    this.edgeFlash(frame, Colors.warning, fade * 0.78);
+    this.sweepPulse(frame, Colors.damage, progress, fade * 0.42);
+    paint(frame, KeyZones.movement, pulseScale(Colors.warning, fade * 0.65), 0.82);
+    paint(frame, KeyZones.interact, pulseScale(Colors.damage, fade * 0.5), 0.72);
+  }
+
+  chromaCheckPulse(frame, progress, strength) {
+    const beat = strength * (0.62 + Math.max(0, Math.sin(progress * Math.PI * 8)) * 0.38);
+    this.radarPulse(frame, Colors.scanner, progress, beat * 0.9);
+    this.sweepPulse(frame, Colors.grav, (progress * 1.35) % 1, beat * 0.55);
+    paint(frame, KeyZones.movement, pulseScale(Colors.scanner, beat), 0.96);
+    paint(frame, KeyZones.interact, pulseScale(Colors.constellation, beat * 0.9), 0.9);
+    paint(frame, KeyZones.quickslots, pulseScale(Colors.oxygen, beat * 0.72), 0.78);
+    paint(frame, KeyZones.ship, pulseScale(Colors.grav, beat * 0.75), 0.86);
   }
 
   chipDamagePulse(frame, progress, strength) {
@@ -1318,7 +1357,31 @@ class LightingState {
       this.mode === "ship" ? 0.45 : 0,
       this.mode === "shipCombat" ? 0.58 : 0,
     );
-    const reward = this.activePulseStrength(["powerUse", "artifact", "levelUp", "rareLoot", "questComplete", "questUpdate", "save", "saved", "load", "boot"]);
+    const reward = this.activePulseStrength(["powerUse", "artifact", "levelUp", "rareLoot", "questComplete", "questUpdate", "save", "saved", "load", "boot", "controlStart", "controlStop", "chromaCheck"]);
+
+    const controlStop = this.activePulseStrength(["controlStop"]);
+    if (controlStop > 0.05) {
+      return {
+        mouse: pulseScale(Colors.warning, 0.54 + controlStop * 0.4),
+        mouseAlt: pulseScale(Colors.damage, 0.45 + controlStop * 0.38),
+        mouseStyle: "damage",
+        mousepad: pulseScale(mix(Colors.warning, Colors.damage, 0.35), 0.42 + controlStop * 0.35),
+        headset: pulseScale(Colors.warning, 0.52 + controlStop * 0.36),
+        chromalink: pulseScale(Colors.damage, 0.35 + controlStop * 0.28),
+      };
+    }
+
+    const chromaCheck = this.activePulseStrength(["controlStart", "chromaCheck"]);
+    if (chromaCheck > 0.05) {
+      return {
+        mouse: pulseScale(Colors.scanner, 0.62 + chromaCheck * 0.5),
+        mouseAlt: pulseScale(Colors.grav, 0.48 + chromaCheck * 0.45),
+        mouseStyle: "scanner",
+        mousepad: pulseScale(mix(Colors.scanner, Colors.grav, 0.45), 0.48 + chromaCheck * 0.5),
+        headset: pulseScale(Colors.oxygen, 0.62 + chromaCheck * 0.48),
+        chromalink: pulseScale(Colors.constellation, 0.42 + chromaCheck * 0.42),
+      };
+    }
 
     if (damage > 0.05) {
       const hit = Math.max(damage, fastPulse * 0.75);
@@ -1703,6 +1766,7 @@ async function runServer() {
   const state = new LightingState();
   const socket = dgram.createSocket("udp4");
   const renderer = await startRenderer(chroma, state);
+  state.push("controlStart", 42);
   let closed = false;
 
   async function close() {

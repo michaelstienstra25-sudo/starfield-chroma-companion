@@ -1,7 +1,7 @@
 Source code and releases:
 https://github.com/michaelstienstra25-sudo/starfield-chroma-companion
 
-The source code is public on GitHub for transparency. The current setup assistant and clean Vortex package contain SFSE plugin DLLs because they are required for Starfield event detection. The clean Vortex package does not include .cmd, .bat, or .ps1 helper scripts.
+The source code is public on GitHub for transparency. The current Nexus/Vortex package contains SFSE plugin DLLs because they are required for Starfield event detection. The clean Nexus package does not include .exe, .cmd, .bat, or .ps1 helper scripts.
 
 What this mod does:
 
@@ -9,9 +9,9 @@ Starfield Chroma Companion adds reactive Razer Chroma lighting to Starfield on P
 
 It makes supported Razer Chroma devices react to in-game moments such as scanner anomalies, combat, weapon fire, reloads, damage, O2/gas/radiation warnings, grav jumps, level-up/power moments, menus, saves, loads, and ship moments.
 
-The alpha includes a Starfield-styled desktop launcher with one START STARFIELD button, status display, Settings, a Razer Chroma shortcut, and an Advanced Panel for Chroma SDK checks, effect previews, and multi-device focus tests.
+The alpha includes a Starfield-styled launcher/control panel with status display, Settings, a Razer Chroma shortcut, and an Advanced Panel for Chroma SDK checks, effect previews, multi-device focus tests, and visible start/stop confirmation pulses.
 
-The setup assistant can auto-detect Starfield, install the companion app, install the SFSE plugin DLLs, save the Starfield folder in the config, and create optional Desktop/Start Menu shortcuts.
+Architecture note: the SFSE plugin DLLs do not talk to Razer directly. They detect Starfield/SFSE events and send them locally to the Node.js companion. The companion talks to the local Razer Chroma SDK and drives keyboard, mouse, mousepad, headset, and Chroma Link effects.
 
 Multi-device Chroma support is now active for keyboard, mouse, mousepad, headset, and chromalink devices. Mouse devices use custom action accents for combat, damage, scanner anomalies, grav/power moments, O2/gas warnings, rewards, menus, and idle state. Headset, mousepad, and chromalink devices receive state-aware pulses. The Settings and Advanced Panel now include effect presets and per-device intensity controls, so users can choose a calmer, more readable, or more combat-heavy feel. Hardware behavior can still vary by device model, so I am still looking for reports from Naga-class mice, Razer headsets, mousepads, and Chroma Link setups.
 
@@ -25,16 +25,6 @@ Required software:
 - Chroma Apps enabled in Razer Chroma
 
 Installation instructions
-
-Recommended setup assistant:
-
-1. Download StarfieldChromaCompanionSetup-v0.1.4-alpha.exe.
-2. Run it.
-3. Let it detect Starfield, or browse to the folder that contains sfse_loader.exe.
-4. Choose whether you want Desktop and Start Menu shortcuts.
-5. Click Install.
-6. Open Razer Chroma and make sure Chroma Apps is enabled.
-7. Launch with the Starfield Chroma Companion shortcut.
 
 Vortex:
 
@@ -57,6 +47,8 @@ node ".\launcher\starfield-chroma-launcher.mjs"
 
 Then click Start Companion + SFSE.
 
+Use SDK Check only to verify that the local Razer SDK is reachable. Use Test Effects to confirm the actual companion pipeline and device takeover. If devices stay on Spectrum Cycling, open Razer Chroma, go to Chroma Apps, enable the global Chroma Apps toggle, and enable Starfield Chroma Companion.
+
 Mod Organizer 2:
 
 MO2 can work, but the companion must be launched from the real mod folder or through MO2. Starfield/SFSE run under MO2's virtual file system, while a normal external Node.js process does not automatically see that virtual Data folder.
@@ -75,26 +67,12 @@ Suggested MO2 setup:
 
 Do not use the control panel's Start SFSE button for an MO2-managed playthrough. That button launches sfse_loader.exe directly and will not use MO2's virtual file system.
 
-Manual:
-
-1. Download the manual release zip.
-2. Extract it outside the Starfield folder.
-3. Run:
-
-```cmd
-install-plugin.cmd "C:\Path\To\SteamLibrary\steamapps\common\Starfield"
-```
-
-4. Start the control panel:
-
-```cmd
-launch-starfield-chroma.cmd
-```
-
-5. Click Start Companion + SFSE.
-
 Do not launch Starfield.exe directly, or SFSE plugins will not load.
 
-Note: Nexus may still flag DLL-based SFSE mods as suspicious until scanned/reviewed. The source code is available on GitHub for transparency.
+Optional GitHub setup assistant:
+
+GitHub releases may also include an optional Windows setup assistant for users who prefer a guided install. Nexus/Vortex users should use the clean Nexus package.
+
+Note: DLL-based SFSE mods can be scrutinized by antivirus tools or mod-hosting scanners. The current Nexus-clean package removes helper executables and command/PowerShell scripts. The source code is available on GitHub for transparency.
 
 Looking for testers with different Razer Chroma setups. Feedback, bug reports, device compatibility notes, and gameplay clips are welcome.

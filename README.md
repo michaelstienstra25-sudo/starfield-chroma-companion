@@ -18,8 +18,8 @@ This project is currently an early PC-only prototype. It is built for players wh
 
 | Use case | Recommended file | Where | Notes |
 | --- | --- | --- | --- |
-| Vortex, MO2, or manual mod-manager install | `StarfieldChromaCompanion-v0.1.7-alpha-nexus-clean.zip` | [Nexus Mods](https://www.nexusmods.com/starfield/mods/17645) | Clean package without `.exe`, `.cmd`, `.bat`, `.ps1`, or log files. |
-| Guided Windows setup | `StarfieldChromaCompanionSetup-v0.1.6-alpha.exe` | [GitHub releases](https://github.com/michaelstienstra25-sudo/starfield-chroma-companion/releases) | Optional installer build for users who prefer a setup assistant. |
+| Vortex, MO2, or manual mod-manager install | `StarfieldChromaCompanion-v0.1.8-alpha-nexus-clean.zip` | [Nexus Mods](https://www.nexusmods.com/starfield/mods/17645) | Clean package without `.exe`, `.cmd`, `.bat`, `.ps1`, or log files. |
+| Guided Windows setup | `StarfieldChromaCompanionSetup-v0.1.8-alpha.exe` | [GitHub releases](https://github.com/michaelstienstra25-sudo/starfield-chroma-companion/releases) | Optional installer build for users who prefer a setup assistant. |
 | Source, release notes, issues, and transparency | Repository source code | GitHub | Use GitHub for development notes, issue reports, and source review. |
 
 The Nexus file is the recommended clean mod-manager package. GitHub is used for source code, issue tracking, release notes, development transparency, and the optional installer build.
@@ -56,10 +56,10 @@ The companion must keep running while Starfield is active. If you launch only `S
 The GitHub release includes an optional single-file setup assistant:
 
 ```text
-StarfieldChromaCompanionSetup-v0.1.6-alpha.exe
+StarfieldChromaCompanionSetup-v0.1.8-alpha.exe
 ```
 
-1. Run `StarfieldChromaCompanionSetup-v0.1.6-alpha.exe`.
+1. Run `StarfieldChromaCompanionSetup-v0.1.8-alpha.exe`.
 2. The setup assistant searches Steam libraries and common install paths for Starfield.
 3. If Starfield is not detected, browse to the folder that contains `sfse_loader.exe`.
 4. Click `Install`.
@@ -109,6 +109,8 @@ This is an unofficial community project and is not affiliated with Bethesda, Raz
 - Per-device intensity controls for mouse, mousepad, headset, and Chroma Link accents.
 - Starfield-styled desktop launcher with one `START STARFIELD` button, tray status, settings, and advanced test panel.
 - Single-file setup assistant that detects Starfield, installs the companion, installs SFSE plugin DLLs, and creates optional Desktop/Start Menu shortcuts.
+- Visible Chroma confirmation pulses when the companion starts or stops.
+- A dedicated `Test Effects` readiness sequence for confirming keyboard, mouse, mousepad, headset, and Chroma Link takeover.
 - Configurable presets, brightness, device intensity, damage thresholds, logging, Chroma SDK URL, UDP port, and stale timeout.
 
 ## Requirements
@@ -128,10 +130,10 @@ Razer Chroma must allow Chroma Apps to take over device lighting. If this is off
 2. Go to `CHROMA APPS`.
 3. Turn the global `CHROMA APPS` toggle on.
 4. Make sure `Starfield Chroma Companion` is enabled in the app list.
-5. In the companion control panel, click `Register/Test Chroma App` or any test effect.
+5. In the companion control panel, click `SDK Check` or `Test Effects`.
 6. Razer Chroma should show `App in use: Starfield Chroma Companion (Chroma Apps)`.
 
-The control panel includes an `Open Razer Chroma` button and repeats these steps. The app does not modify Razer's internal settings directly because Razer documents Chroma Apps as a user-controlled Synapse/Chroma setting.
+The control panel includes an `Open Razer Chroma` button and repeats these steps. `SDK Check` only verifies that the local Razer SDK can be reached. `Test Effects` sends real companion events and should visibly pulse supported devices. The app does not modify Razer's internal settings directly because Razer documents Chroma Apps as a user-controlled Synapse/Chroma setting.
 
 ## Looking For Testers
 

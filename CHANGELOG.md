@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.1.8-alpha
+
+- Added visible Chroma confirmation pulses when the companion starts and stops.
+- Added a true Chroma effects readiness test that runs through the normal companion pipeline instead of only checking SDK registration.
+- Added stronger start/stop/test accents for keyboard, mouse, mousepad, headset, and Chroma Link devices.
+- Clarified the browser control panel status with a `Chroma Takeover` indicator and stronger Chroma Apps warning text.
+- Split `SDK Check` from `Test Effects` so users can tell the difference between SDK connectivity and actual game-effect takeover.
+- Updated Nexus/GitHub wording around the clean mod-manager package, optional GitHub setup assistant, auto-start helper, and MO2 flow.
+
 ## v0.1.7-alpha
 
 - Added `auto-start-sfse.mjs`, a Nexus-clean Node launch helper for Vortex/direct users that starts the launcher service, starts the Chroma companion, and launches Starfield through SFSE in one step.
