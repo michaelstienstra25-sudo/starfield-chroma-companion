@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Changed the MO2 browser handoff to use the Windows Explorer URL handler first, with the previous `cmd /c start` method retained as a fallback.
+- Documented `http://127.0.0.1:47322/` as the reliable bookmarked control-panel route when MO2 or Windows suppresses automatic browser opening.
+- Clarified that a reachable bookmarked panel means the launcher is running and only the browser handoff was blocked.
+
 ## v0.1.9-alpha
 
 - Fixed the desktop app becoming visible but completely unresponsive when the local launcher status endpoint stalled.

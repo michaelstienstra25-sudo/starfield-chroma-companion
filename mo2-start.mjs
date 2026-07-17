@@ -8,12 +8,26 @@ const LAUNCHER = path.join(SCRIPT_DIR, "launcher", "starfield-chroma-launcher.mj
 const PORT = Number(process.env.STARFIELD_CHROMA_LAUNCHER_PORT ?? 47322);
 const URL = `http://127.0.0.1:${PORT}/`;
 
-function openBrowser(url) {
-  childProcess.spawn("cmd.exe", ["/c", "start", "", url], {
-    detached: true,
-    stdio: "ignore",
-    windowsHide: true,
-  }).unref();
+function spawnDetached(command, args) {
+  return new Promise((resolve) => {
+    const child = childProcess.spawn(command, args, {
+      detached: true,
+      stdio: "ignore",
+      windowsHide: true,
+    });
+    child.once("spawn", () => {
+      child.unref();
+      resolve(true);
+    });
+    child.once("error", () => resolve(false));
+  });
+}
+
+async function openBrowser(url) {
+  // MO2 can suppress `cmd /c start` child-shell actions. Explorer asks the
+  // Windows shell to open the URL directly and works in more MO2 setups.
+  if (await spawnDetached("explorer.exe", [url])) return true;
+  return spawnDetached("cmd.exe", ["/d", "/s", "/c", "start", "", url]);
 }
 
 function canReachPanel() {
@@ -45,7 +59,11 @@ async function main() {
     }
   }
 
-  openBrowser(URL);
+  const browserRequested = await openBrowser(URL);
+  console.log(`Starfield Chroma control panel: ${URL}`);
+  if (!browserRequested) {
+    console.warn(`Open or bookmark ${URL} in your regular browser.`);
+  }
 }
 
 main().catch((error) => {

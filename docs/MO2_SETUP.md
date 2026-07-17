@@ -14,8 +14,16 @@ The SFSE plugin sends game events to the companion over localhost/UDP, so the co
    - Start in: the mod's real `StarfieldChromaCompanion` folder inside MO2's `mods` directory
    - Arguments: `.\mo2-start.mjs`
 4. Run `Starfield Chroma Companion` from MO2.
-5. The control panel opens in your browser. Click `Start Companion`.
+5. The helper asks Windows to open the control panel in your default browser. Click `Start Companion`.
 6. Launch Starfield through your MO2 `sfse_loader.exe` executable.
+
+The control panel always uses this local address:
+
+```text
+http://127.0.0.1:47322/
+```
+
+Bookmark that address in your normal browser. Some MO2 or Windows security configurations allow the local launcher to start but suppress the automatic browser handoff. In that case, open the bookmark manually after running the `Starfield Chroma Companion` MO2 entry. This does not indicate that the companion failed to start.
 
 ## Vortex/Direct Auto-Start Helper
 
@@ -33,6 +41,7 @@ If MO2 shows that it is locked after opening the companion, unlock MO2 and then 
 
 ## Troubleshooting
 
-- If the control panel does not open, make sure Node.js 20 or newer is installed and that `node.exe` works from Command Prompt.
+- If the control panel does not open automatically, first visit `http://127.0.0.1:47322/` manually. If the page loads, the launcher is working and only the automatic browser handoff was suppressed.
+- If `http://127.0.0.1:47322/` does not load, make sure Node.js 20 or newer is installed and that `node.exe` works from Command Prompt.
 - If the companion starts but there are no effects, make sure Razer Chroma Apps is enabled and Starfield was launched through SFSE from MO2.
 - If the panel cannot find Starfield, set the Starfield folder manually in Settings. This should be the real folder containing `sfse_loader.exe`.

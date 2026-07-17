@@ -200,6 +200,14 @@ Suggested MO2 flow:
 5. In the control panel, click `Start Companion`.
 6. Launch Starfield through SFSE from MO2.
 
+The MO2 helper asks Windows to open the control panel automatically. If MO2 or a Windows security policy suppresses that browser handoff, open or bookmark the local panel directly:
+
+```text
+http://127.0.0.1:47322/
+```
+
+If that page loads, the launcher is running correctly; only the automatic browser-open action was blocked.
+
 Do not use the control panel's `Start SFSE` button for an MO2-managed playthrough. That button launches `sfse_loader.exe` directly and will not use MO2's virtual file system.
 
 If you launch the companion outside MO2, use the real path to the installed MO2 mod folder, not the virtual Starfield `Data` path. See [docs/MO2_SETUP.md](docs/MO2_SETUP.md) for the shorter MO2-specific setup guide.
@@ -218,6 +226,7 @@ The source code is public in this repository for transparency. If a file is quar
 | No effects in game | Make sure Starfield is launched through SFSE and the companion is running before or during gameplay. |
 | Vortex users want one launch action | Add a Vortex tool that runs `node.exe` with `.\auto-start-sfse.mjs` from `Data\StarfieldChromaCompanion`. |
 | Vortex install works but the companion does not start | Open Command Prompt in `Data\StarfieldChromaCompanion` and run `node ".\launcher\starfield-chroma-launcher.mjs"`. |
+| MO2 panel does not open automatically | Open the bookmarked local panel at `http://127.0.0.1:47322/`. If it loads, the launcher is running and only the browser handoff was suppressed. |
 | MO2 install does not react | Start the companion from the real MO2 mod folder or through an MO2 executable using `node.exe` and `.\mo2-start.mjs`. Launch SFSE through MO2. |
 | Effects work once but stop later | Restart the companion, then use the Advanced Panel to run `Register/Test Chroma App`. |
 | GitHub installer is blocked by Windows | Use the Nexus-clean package, or review the source/build yourself before choosing whether to allow the installer. |

@@ -65,6 +65,12 @@ Suggested MO2 setup:
 5. In the control panel, click Start Companion.
 6. Launch Starfield through SFSE from MO2.
 
+The MO2 helper asks Windows to open the local control panel automatically. If that browser handoff is suppressed by MO2 or Windows security, open or bookmark this address in your normal browser:
+
+http://127.0.0.1:47322/
+
+If the page loads, the launcher is working correctly and only the automatic browser-open action was blocked.
+
 Do not use the control panel's Start SFSE button for an MO2-managed playthrough. That button launches sfse_loader.exe directly and will not use MO2's virtual file system.
 
 Do not launch Starfield.exe directly, or SFSE plugins will not load.
